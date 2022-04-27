@@ -1,0 +1,9 @@
+[package]
+name = "jet-programmable-rust-binding"
+version = "0.1.0"
+edition = "2018"
+readme = "README.md"
+authors = ["ByzanTeam <dev@byzan.team>"]
+repository = "https://github.com/byzanteam/jet-programmable-rust-binding"
+
+[dependencies]
