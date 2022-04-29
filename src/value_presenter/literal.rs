@@ -143,6 +143,23 @@ fn do_make_literal_presenter<'a>(
             }),
             None => Ok(LiteralValuePresenter::SingleLineField(None)),
         },
+        FieldType::TableRowField => match object.get("value") {
+            Some(value) => match value {
+                Value::String(str) => match UuidV4::from_str(str) {
+                    Ok(uuid) => Ok(LiteralValuePresenter::TableRowField(Some(uuid))),
+                    Err(_err) => Err(DecodeError::InvalidValue {
+                        field_type: FieldType::TableRowField,
+                        value,
+                    }),
+                },
+                Value::Null => Ok(LiteralValuePresenter::TableRowField(None)),
+                value => Err(DecodeError::InvalidValue {
+                    field_type: FieldType::TableRowField,
+                    value,
+                }),
+            },
+            None => Ok(LiteralValuePresenter::TableRowField(None)),
+        },
         _ => panic!("Not implemented"),
     }
 }
@@ -152,6 +169,7 @@ mod tests {
     use super::*;
     use serde_json::json;
     use time::macros::datetime;
+    use uuid::uuid;
 
     #[test]
     fn test_field_type_matches() {
@@ -619,6 +637,81 @@ mod tests {
 
             let object = json.as_object().unwrap();
             let result = do_make_literal_presenter(&FieldType::SingleLineField, object);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    // test table_row_field
+    #[test]
+    fn test_do_make_literal_table_row_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_field",
+                "value": "67e55044-10b1-426f-9247-bb680e5fe0c8"
+            });
+
+            let expected_uuid = uuid!("67e55044-10b1-426f-9247-bb680e5fe0c8");
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::TableRowField, object);
+
+            assert!(matches!(
+                result,
+                Ok(LiteralValuePresenter::TableRowField(Some(UuidV4(uuid)))) if uuid == expected_uuid
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_field",
+                "value": null
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::TableRowField, object);
+
+            assert!(matches!(
+                result,
+                Ok(LiteralValuePresenter::TableRowField(None))
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_field"
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::TableRowField, object);
+
+            assert!(matches!(
+                result,
+                Ok(LiteralValuePresenter::TableRowField(None))
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_field",
+                "value": "invalid"
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::TableRowField, object);
 
             assert!(matches!(
                 result,
