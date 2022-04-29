@@ -2,6 +2,7 @@ use serde_json::Value;
 
 use super::{field_type::FieldType, ValuePresenter};
 
+#[derive(Debug)]
 pub enum DecodeError<'a> {
     NoType,
     UnsupportedType(&'a Value),

@@ -6,6 +6,7 @@ use super::{
     value_type::{NaiveDateTime, OptionsValue, UserBoundary, UuidV4},
 };
 
+#[derive(Debug)]
 pub enum LiteralValuePresenter {
     SingleLineField(Option<String>),
     UserBoundaryField(Option<UserBoundary>),

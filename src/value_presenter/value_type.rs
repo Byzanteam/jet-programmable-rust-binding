@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 pub type UuidV4 = Uuid;
 
+#[derive(Debug)]
 pub struct UserBoundary {
     user_uuids: Vec<UuidV4>,
     simple_department_uuids: Vec<UuidV4>,
@@ -27,6 +28,7 @@ impl UserBoundary {
 
 type OptionValue = String;
 
+#[derive(Debug)]
 pub struct OptionsValue {
     pub options: Vec<OptionValue>,
     pub other: Option<OptionValue>,
