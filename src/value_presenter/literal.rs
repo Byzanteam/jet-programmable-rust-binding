@@ -19,12 +19,16 @@ pub enum LiteralValuePresenter {
 }
 
 impl LiteralValuePresenter {
-    pub fn field_type_matches(&self, field_type: &FieldType) -> bool {
+    pub fn get_field_type(&self) -> FieldType {
         match self {
-            LiteralValuePresenter::SingleLineField(_value) => {
-                *field_type == FieldType::SingleLineField
-            }
-            _ => false,
+            LiteralValuePresenter::BooleanField(_) => FieldType::BooleanField,
+            LiteralValuePresenter::CheckboxField(_) => FieldType::CheckboxField,
+            LiteralValuePresenter::DateTimeField(_) => FieldType::DateTimeField,
+            LiteralValuePresenter::NumericField(_) => FieldType::NumericField,
+            LiteralValuePresenter::RadioButtonField(_) => FieldType::RadioButtonField,
+            LiteralValuePresenter::SingleLineField(_) => FieldType::SingleLineField,
+            LiteralValuePresenter::TableRowField(_) => FieldType::TableRowField,
+            LiteralValuePresenter::UserBoundaryField(_) => FieldType::UserBoundaryField,
         }
     }
 }
@@ -68,9 +72,10 @@ mod tests {
     #[test]
     fn test_field_type_matches() {
         let vp = LiteralValuePresenter::SingleLineField(Some("value".to_string()));
+        let field_type = vp.get_field_type();
 
-        assert_eq!(vp.field_type_matches(&FieldType::SingleLineField), true);
-        assert_eq!(vp.field_type_matches(&FieldType::BooleanField), false);
+        assert!(field_type == FieldType::SingleLineField);
+        assert!(field_type != FieldType::BooleanField);
     }
 
     #[test]

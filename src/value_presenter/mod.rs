@@ -13,10 +13,10 @@ pub enum ValuePresenter {
 }
 
 impl ValuePresenter {
-    pub fn field_type_matches(&self, field_type: &FieldType) -> bool {
+    pub fn get_field_type(&self) -> FieldType {
         match self {
             ValuePresenter::Literal(literal_value_presenter) => {
-                literal_value_presenter.field_type_matches(field_type)
+                literal_value_presenter.get_field_type()
             }
         }
     }
