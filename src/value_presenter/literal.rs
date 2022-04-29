@@ -59,3 +59,79 @@ fn make_single_line_field_presenter(
         None => Ok(LiteralValuePresenter::SingleLineField(None)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_field_type_matches() {
+        let vp = LiteralValuePresenter::SingleLineField(Some("value".to_string()));
+
+        assert_eq!(vp.field_type_matches(&FieldType::SingleLineField), true);
+        assert_eq!(vp.field_type_matches(&FieldType::BooleanField), false);
+    }
+
+    #[test]
+    fn test_make_single_line_field_presenter() {
+        let json = json!({
+            "type": "literal",
+            "field_type": "single_line_field",
+            "value": "value"
+        });
+
+        let object = json.as_object().unwrap();
+        let vp = make_single_line_field_presenter(object).unwrap();
+
+        assert!(matches!(
+            vp,
+            LiteralValuePresenter::SingleLineField(Some(_))
+        ));
+    }
+
+    #[test]
+    fn test_make_single_line_field_presenter_with_null() {
+        let json = json!({
+            "type": "literal",
+            "field_type": "single_line_field",
+            "value": null
+        });
+
+        let object = json.as_object().unwrap();
+        let vp = make_single_line_field_presenter(object).unwrap();
+
+        assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
+
+        // value is not present, so we should get None
+        let json = json!({
+            "type": "literal",
+            "field_type": "single_line_field"
+        });
+
+        let object = json.as_object().unwrap();
+        let vp = make_single_line_field_presenter(object).unwrap();
+
+        assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
+    }
+
+    #[test]
+    fn test_make_single_line_field_presenter_and_return_error() {
+        let json = json!({
+            "type": "literal",
+            "field_type": "single_line_field",
+            "value": 123
+        });
+
+        let object = json.as_object().unwrap();
+        let result = make_single_line_field_presenter(object);
+
+        assert!(matches!(
+            result,
+            Err(DecodeError::InvalidValue {
+                field_type: _,
+                value: _
+            })
+        ));
+    }
+}
