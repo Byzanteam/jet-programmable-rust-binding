@@ -53,6 +53,15 @@ fn do_make_literal_presenter<'a>(
     object: &'a Map<String, Value>,
 ) -> Result<LiteralValuePresenter, DecodeError<'a>> {
     match field_type {
+        FieldType::BooleanField => match object.get("value") {
+            Some(Value::Bool(value)) => Ok(LiteralValuePresenter::BooleanField(Some(*value))),
+            Some(Value::Null) => Ok(LiteralValuePresenter::BooleanField(None)),
+            Some(value) => Err(DecodeError::InvalidValue {
+                field_type: FieldType::BooleanField,
+                value,
+            }),
+            None => Ok(LiteralValuePresenter::BooleanField(None)),
+        },
         FieldType::SingleLineField => match object.get("value") {
             Some(Value::String(value)) => Ok(LiteralValuePresenter::SingleLineField(Some(
                 value.to_string(),
@@ -82,67 +91,157 @@ mod tests {
         assert!(field_type != FieldType::BooleanField);
     }
 
+    // test boolean_field
+
+    #[test]
+    fn test_do_make_literal_boolean_field_presenter() {
+        // test true value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "boolean_field",
+                "value": true
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::BooleanField, object).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::BooleanField(Some(true))
+            ));
+        }
+
+        // test false value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "boolean_field",
+                "value": false
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::BooleanField, object).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::BooleanField(Some(false))
+            ));
+        }
+
+        // test null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "boolean_field",
+                "value": null
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::BooleanField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::BooleanField(None)));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "boolean_field",
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::BooleanField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::BooleanField(None)));
+        }
+
+        // test invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "boolean_field",
+                "value": 123
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::BooleanField, object);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
     // test single_line_field
 
     #[test]
     fn test_do_make_literal_single_line_field_presenter() {
-        let json = json!({
-            "type": "literal",
-            "field_type": "single_line_field",
-            "value": "value"
-        });
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_field",
+                "value": "value"
+            });
 
-        let object = json.as_object().unwrap();
-        let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
 
-        assert!(matches!(
-            vp,
-            LiteralValuePresenter::SingleLineField(Some(_))
-        ));
-    }
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::SingleLineField(Some(_))
+            ));
+        }
 
-    #[test]
-    fn test_do_make_literal_single_line_field_presenter_with_null() {
-        let json = json!({
-            "type": "literal",
-            "field_type": "single_line_field",
-            "value": null
-        });
+        // test null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_field",
+                "value": null
+            });
 
-        let object = json.as_object().unwrap();
-        let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
 
-        assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
+            assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
+        }
 
         // value is not present, so we should get None
-        let json = json!({
-            "type": "literal",
-            "field_type": "single_line_field"
-        });
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_field"
+            });
 
-        let object = json.as_object().unwrap();
-        let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
 
-        assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
-    }
+            assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
+        }
 
-    #[test]
-    fn test_do_make_literal_single_line_field_presenter_and_return_error() {
-        let json = json!({
-            "type": "literal",
-            "field_type": "single_line_field",
-            "value": 123
-        });
+        // test invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_field",
+                "value": 123
+            });
 
-        let object = json.as_object().unwrap();
-        let result = do_make_literal_presenter(&FieldType::SingleLineField, object);
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::SingleLineField, object);
 
-        assert!(matches!(
-            result,
-            Err(DecodeError::InvalidValue {
-                field_type: _,
-                value: _
-            })
-        ));
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
     }
 }
