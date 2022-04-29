@@ -73,6 +73,25 @@ fn do_make_literal_presenter<'a>(
             }),
             None => Ok(LiteralValuePresenter::SingleLineField(None)),
         },
+        FieldType::CheckboxField => match object.get("value") {
+            Some(value) => match value {
+                Value::Object(object) => match OptionsValue::from_json(object) {
+                    Ok(options_value) => {
+                        Ok(LiteralValuePresenter::CheckboxField(Some(options_value)))
+                    }
+                    Err(_err) => Err(DecodeError::InvalidValue {
+                        field_type: FieldType::CheckboxField,
+                        value,
+                    }),
+                },
+                Value::Null => Ok(LiteralValuePresenter::CheckboxField(None)),
+                _value => Err(DecodeError::InvalidValue {
+                    field_type: FieldType::CheckboxField,
+                    value,
+                }),
+            },
+            None => Ok(LiteralValuePresenter::CheckboxField(None)),
+        },
         _ => panic!("Not implemented"),
     }
 }
@@ -166,6 +185,73 @@ mod tests {
 
             let object = json.as_object().unwrap();
             let result = do_make_literal_presenter(&FieldType::BooleanField, object);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    // test checkbox_field
+    #[test]
+    fn test_do_make_literal_checkbox_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "checkbox_field",
+                "value": {
+                    "options": ["option1", "option2"],
+                    "other": "other"
+                }
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::CheckboxField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::CheckboxField(Some(_))));
+        }
+
+        // test null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "checkbox_field",
+                "value": null
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::CheckboxField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::CheckboxField(None)));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "checkbox_field",
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::CheckboxField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::CheckboxField(None)));
+        }
+
+        // test invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "checkbox_field",
+                "value": "invalid"
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::CheckboxField, object);
 
             assert!(matches!(
                 result,
