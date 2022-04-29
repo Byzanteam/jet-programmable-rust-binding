@@ -1,4 +1,4 @@
-use serde_json::{Map, Number, Value};
+use serde_json::{json, Map, Number, Value};
 
 use super::{
     error::DecodeError,
@@ -29,6 +29,19 @@ impl LiteralValuePresenter {
             LiteralValuePresenter::SingleLineField(_) => FieldType::SingleLineField,
             LiteralValuePresenter::TableRowField(_) => FieldType::TableRowField,
             LiteralValuePresenter::UserBoundaryField(_) => FieldType::UserBoundaryField,
+        }
+    }
+
+    pub fn to_json(&self) -> Value {
+        match self {
+            LiteralValuePresenter::BooleanField(value) => {
+                json!({
+                    "type": "literal",
+                    "field_type": FieldType::BooleanField.to_str(),
+                    "value": value,
+                })
+            }
+            _ => panic!("Not implemented"),
         }
     }
 }
@@ -817,6 +830,26 @@ mod tests {
                     value: _
                 })
             ));
+        }
+    }
+
+    #[test]
+    fn test_literal_boolean_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::BooleanField(Some(true));
+            let str = vp.to_json().to_string();
+            let expected = json!({"type": "literal", "field_type": "BOOLEAN_FIELD", "value": true});
+
+            assert!(str == expected.to_string());
+        }
+
+        // null value
+        {
+            let vp = LiteralValuePresenter::BooleanField(None);
+            let str = vp.to_json().to_string();
+            let expected = json!({"type": "literal", "field_type": "BOOLEAN_FIELD", "value": null});
+
+            assert!(str == expected.to_string());
         }
     }
 }

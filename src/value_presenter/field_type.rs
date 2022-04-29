@@ -34,4 +34,17 @@ impl FieldType {
             _ => None,
         }
     }
+
+    pub fn to_str(&self) -> &str {
+        match self {
+            FieldType::BooleanField => "BOOLEAN_FIELD",
+            FieldType::CheckboxField => "CHECKBOX_FIELD",
+            FieldType::DateTimeField => "DATE_TIME_FIELD",
+            FieldType::NumericField => "NUMERIC_FIELD",
+            FieldType::RadioButtonField => "RADIO_BUTTON_FIELD",
+            FieldType::SingleLineField => "SINGLE_LINE_FIELD",
+            FieldType::TableRowField => "TABLE_ROW_FIELD",
+            FieldType::UserBoundaryField => "USER_BOUNDARY_FIELD",
+        }
+    }
 }
