@@ -48,6 +48,13 @@ impl LiteralValuePresenter {
                     "value": value.as_ref().map(|v| v.to_json()),
                 })
             }
+            LiteralValuePresenter::DateTimeField(value) => {
+                json!({
+                    "type": "literal",
+                    "field_type": FieldType::DateTimeField.to_str(),
+                    "value": value.as_ref().map(|v| v.to_str()),
+                })
+            }
             _ => panic!("Not implemented"),
         }
     }
@@ -889,6 +896,39 @@ mod tests {
                 "field_type": "CHECKBOX_FIELD",
                 "value": {"options": [], "other": null}
             });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    #[test]
+    fn test_literal_date_time_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::DateTimeField(Some(
+                NaiveDateTime::from_str("2020-01-01T00:00:00Z").unwrap(),
+            ));
+            let str = vp.to_json().to_string();
+            let expected = json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00"});
+
+            assert!(str == expected.to_string());
+        }
+
+        // with ms
+        {
+            let vp = LiteralValuePresenter::DateTimeField(Some(
+                NaiveDateTime::from_str("2020-01-01T00:00:00.123456Z").unwrap(),
+            ));
+            let str = vp.to_json().to_string();
+            let expected = json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00.123456"});
+
+            assert!(str == expected.to_string(), "actual: {}", str);
+        }
+
+        {
+            let vp = LiteralValuePresenter::DateTimeField(None);
+            let str = vp.to_json().to_string();
+            let expected =
+                json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": null});
 
             assert!(str == expected.to_string());
         }
