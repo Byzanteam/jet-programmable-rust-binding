@@ -120,6 +120,29 @@ fn do_make_literal_presenter<'a>(
             }),
             None => Ok(LiteralValuePresenter::NumericField(None)),
         },
+        FieldType::RadioButtonField => match object.get("value") {
+            Some(value) => match value {
+                Value::Object(object) => match OptionsValue::from_json(object) {
+                    Ok(options_value) if options_value.count_options() <= 1 => {
+                        Ok(LiteralValuePresenter::RadioButtonField(Some(options_value)))
+                    }
+                    Ok(_options_value) => Err(DecodeError::InvalidValue {
+                        field_type: FieldType::RadioButtonField,
+                        value,
+                    }),
+                    Err(_err) => Err(DecodeError::InvalidValue {
+                        field_type: FieldType::RadioButtonField,
+                        value,
+                    }),
+                },
+                Value::Null => Ok(LiteralValuePresenter::RadioButtonField(None)),
+                _value => Err(DecodeError::InvalidValue {
+                    field_type: FieldType::RadioButtonField,
+                    value,
+                }),
+            },
+            None => Ok(LiteralValuePresenter::RadioButtonField(None)),
+        },
         _ => panic!("Not implemented"),
     }
 }
@@ -500,6 +523,102 @@ mod tests {
 
             let object = json.as_object().unwrap();
             let result = do_make_literal_presenter(&FieldType::NumericField, object);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    // test radio_button_field
+    #[test]
+    fn test_do_make_literal_radio_button_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+                "value": {
+                    "options": ["option"],
+                    "other": null
+                }
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::RadioButtonField, object).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::RadioButtonField(Some(OptionsValue {
+                    options,
+                    other: None
+                })) if options.len() == 1
+            ));
+        }
+
+        // test null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+                "value": null
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::RadioButtonField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::RadioButtonField(None)));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::RadioButtonField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::RadioButtonField(None)));
+        }
+
+        // test invalid options count
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+                "value": {
+                    "options": ["option1", "option2"],
+                    "other": null
+                }
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::RadioButtonField, object);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+
+        // test invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+                "value": "invalid"
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::RadioButtonField, object);
 
             assert!(matches!(
                 result,
