@@ -35,6 +35,58 @@ impl UserBoundary {
             && self.simple_department_uuids.len() == 0
             && self.penetrating_department_uuids.len() == 0
     }
+
+    pub fn from_json(json: &Map<String, Value>) -> Result<Self, &'static str> {
+        let mut user_uuids = vec![];
+        let mut simple_department_uuids = vec![];
+        let mut penetrating_department_uuids = vec![];
+
+        if let Some(user_uuids_json) = json.get("user_uuids") {
+            match Self::extract_uuids_from_json(user_uuids_json) {
+                Ok(uuids) => user_uuids = uuids,
+                Err(msg) => return Err(msg),
+            }
+        }
+
+        if let Some(simple_department_uuids_json) = json.get("simple_department_uuids") {
+            match Self::extract_uuids_from_json(simple_department_uuids_json) {
+                Ok(uuids) => simple_department_uuids = uuids,
+                Err(msg) => return Err(msg),
+            }
+        }
+
+        if let Some(penetrating_department_uuids_json) = json.get("penetrating_department_uuids") {
+            match Self::extract_uuids_from_json(penetrating_department_uuids_json) {
+                Ok(uuids) => penetrating_department_uuids = uuids,
+                Err(msg) => return Err(msg),
+            }
+        }
+
+        Ok(UserBoundary {
+            user_uuids,
+            simple_department_uuids,
+            penetrating_department_uuids,
+        })
+    }
+
+    fn extract_uuids_from_json(json: &Value) -> Result<Vec<UuidV4>, &'static str> {
+        let mut uuids = vec![];
+
+        match json {
+            Value::Array(array) => {
+                for uuid_json in array {
+                    match UuidV4::from_str(&uuid_json.as_str().unwrap()) {
+                        Ok(uuid) => uuids.push(uuid),
+                        Err(_) => return Err("invalid uuid"),
+                    }
+                }
+            }
+            Value::Null => {}
+            _ => return Err("invalid uuid"),
+        }
+
+        Ok(uuids)
+    }
 }
 
 type OptionValue = String;
@@ -149,6 +201,73 @@ mod tests {
         let empty = UserBoundary::empty();
 
         assert!(empty.is_empty());
+    }
+
+    #[test]
+    fn test_user_boundary_from_json() {
+        {
+            let json = json!({
+                "user_uuids": [
+                    "00000000-0000-0000-0000-ffff00000000",
+                ],
+                "simple_department_uuids": [
+                    "00000000-0000-0000-0000-ffff00000001",
+                    "00000000-0000-0000-0000-ffff00000002",
+                ],
+                "penetrating_department_uuids": [
+                    "00000000-0000-0000-0000-ffff00000003",
+                    "00000000-0000-0000-0000-ffff00000004",
+                    "00000000-0000-0000-0000-ffff00000005",
+                ],
+            });
+
+            let user_boundary = UserBoundary::from_json(json.as_object().unwrap());
+            assert!(matches!(
+                user_boundary,
+                Ok(UserBoundary {
+                    user_uuids,
+                    simple_department_uuids,
+                    penetrating_department_uuids
+                }) if user_uuids.len() == 1 && simple_department_uuids.len() == 2 && penetrating_department_uuids.len() == 3
+            ));
+        }
+
+        // empty uuids
+        {
+            let json = json!({
+                "user_uuids": [
+                ],
+                "simple_department_uuids": [
+                ],
+                "penetrating_department_uuids": [
+                ],
+            });
+
+            let user_boundary = UserBoundary::from_json(json.as_object().unwrap());
+            assert!(matches!(
+                user_boundary,
+                Ok(UserBoundary {
+                    user_uuids,
+                    simple_department_uuids,
+                    penetrating_department_uuids
+                }) if user_uuids.len() == 0 && simple_department_uuids.len() == 0 && penetrating_department_uuids.len() == 0
+            ));
+        }
+
+        // uuids is not present
+        {
+            let json = json!({});
+
+            let user_boundary = UserBoundary::from_json(json.as_object().unwrap());
+            assert!(matches!(
+                user_boundary,
+                Ok(UserBoundary {
+                    user_uuids,
+                    simple_department_uuids,
+                    penetrating_department_uuids
+                }) if user_uuids.len() == 0 && simple_department_uuids.len() == 0 && penetrating_department_uuids.len() == 0
+            ));
+        }
     }
 
     #[test]
