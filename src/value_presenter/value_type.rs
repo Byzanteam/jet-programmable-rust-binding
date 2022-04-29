@@ -1,5 +1,5 @@
 use serde_json::{Map, Value};
-use time::PrimitiveDateTime;
+use time::{format_description::well_known::Rfc3339, PrimitiveDateTime};
 use uuid::Uuid;
 
 pub type UuidV4 = Uuid;
@@ -78,12 +78,35 @@ impl OptionsValue {
     }
 }
 
-pub type NaiveDateTime = PrimitiveDateTime;
+#[derive(Debug)]
+pub struct NaiveDateTime(PrimitiveDateTime);
+
+impl NaiveDateTime {
+    pub fn from_str(str: &str) -> Result<Self, &'static str> {
+        // ISO 8601 string `2022-04-29T07:34:10.420159`
+
+        let str = Self::normalize(str);
+
+        match PrimitiveDateTime::parse(&str, &Rfc3339) {
+            Ok(date) => Ok(NaiveDateTime(date)),
+            Err(_) => Err("invalid date"),
+        }
+    }
+
+    fn normalize(str: &str) -> String {
+        if str.ends_with("Z") {
+            return str.to_string();
+        } else {
+            return str.to_string().clone() + "Z";
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::json;
+    use time::macros::datetime;
     use uuid::{uuid, Uuid};
 
     #[test]
@@ -265,6 +288,43 @@ mod tests {
             let result = OptionsValue::from_json(object);
 
             assert!(matches!(result, Err(_)));
+        }
+    }
+
+    #[test]
+    fn test_make_naive_date_time_from_str() {
+        let expected = datetime!(2022-04-29 07:34:10.420159);
+
+        {
+            let str = "2022-04-29T07:34:10.420159";
+            let ndt = NaiveDateTime::from_str(&str);
+
+            assert_eq!(ndt.unwrap().0, expected);
+        }
+
+        // with timezone
+        {
+            let str = "2022-04-29T07:34:10.420159Z";
+            let ndt = NaiveDateTime::from_str(&str);
+
+            assert_eq!(ndt.unwrap().0, expected);
+        }
+
+        // without ms
+        {
+            let str = "2022-04-29T07:34:10Z";
+            let ndt = NaiveDateTime::from_str(&str);
+            let expected = datetime!(2022-04-29 07:34:10);
+
+            assert_eq!(ndt.unwrap().0, expected);
+        }
+
+        // invalid str
+        {
+            let str = "2022-04-29 07:34";
+            let ndt = NaiveDateTime::from_str(&str);
+
+            assert!(matches!(ndt, Err(_)));
         }
     }
 }
