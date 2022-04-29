@@ -1,4 +1,4 @@
-use serde_json::{Map, Value};
+use serde_json::{Map, Number, Value};
 
 use super::{
     error::DecodeError,
@@ -13,7 +13,7 @@ pub enum LiteralValuePresenter {
     BooleanField(Option<bool>),
     CheckboxField(Option<OptionsValue>),
     DateTimeField(Option<NaiveDateTime>),
-    NumericField(Option<f64>),
+    NumericField(Option<Number>),
     RadioButtonField(Option<OptionsValue>),
     TableRowField(Option<UuidV4>),
 }
@@ -108,6 +108,17 @@ fn do_make_literal_presenter<'a>(
                 }),
             },
             None => Ok(LiteralValuePresenter::DateTimeField(None)),
+        },
+        FieldType::NumericField => match object.get("value") {
+            Some(Value::Number(number)) => {
+                Ok(LiteralValuePresenter::NumericField(Some(number.to_owned())))
+            }
+            Some(Value::Null) => Ok(LiteralValuePresenter::NumericField(None)),
+            Some(value) => Err(DecodeError::InvalidValue {
+                field_type: FieldType::NumericField,
+                value,
+            }),
+            None => Ok(LiteralValuePresenter::NumericField(None)),
         },
         _ => panic!("Not implemented"),
     }
@@ -407,6 +418,88 @@ mod tests {
 
             let object = json.as_object().unwrap();
             let result = do_make_literal_presenter(&FieldType::DateTimeField, object);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    // test numeric_field
+    #[test]
+    fn test_do_make_literal_number_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+                "value": 123
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::NumericField, object).unwrap();
+
+            assert!(
+                matches!(vp, LiteralValuePresenter::NumericField(Some(n)) if n == Number::from(123 as i64))
+            );
+        }
+
+        // float
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+                "value": 123.123
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::NumericField, object).unwrap();
+
+            assert!(
+                matches!(vp, LiteralValuePresenter::NumericField(Some(n)) if n == Number::from_f64(123.123).unwrap())
+            );
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+                "value": null
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::NumericField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::NumericField(None)));
+        }
+
+        // value is not present, so we should get None
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::NumericField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::NumericField(None)));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+                "value": "123"
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::NumericField, object);
 
             assert!(matches!(
                 result,
