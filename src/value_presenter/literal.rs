@@ -8,14 +8,14 @@ use super::{
 
 #[derive(Debug)]
 pub enum LiteralValuePresenter {
-    SingleLineField(Option<String>),
-    UserBoundaryField(Option<UserBoundary>),
     BooleanField(Option<bool>),
     CheckboxField(Option<OptionsValue>),
     DateTimeField(Option<NaiveDateTime>),
     NumericField(Option<Number>),
     RadioButtonField(Option<OptionsValue>),
+    SingleLineField(Option<String>),
     TableRowField(Option<UuidV4>),
+    UserBoundaryField(Option<UserBoundary>),
 }
 
 impl LiteralValuePresenter {
