@@ -179,7 +179,6 @@ fn do_make_literal_presenter<'a>(
             },
             None => Ok(LiteralValuePresenter::UserBoundaryField(None)),
         },
-        _ => panic!("Not implemented"),
     }
 }
 
