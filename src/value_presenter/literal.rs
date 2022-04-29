@@ -39,7 +39,7 @@ pub fn make_literal_value_presenter(
     match object.get("field_type") {
         Some(value) => match value {
             Value::String(ref field_type) => match FieldType::from_str(field_type) {
-                Some(FieldType::SingleLineField) => make_single_line_field_presenter(object),
+                Some(ref field_type) => do_make_literal_presenter(field_type, object),
                 _ => Err(DecodeError::UnsupportedFieldType(value)),
             },
             value => Err(DecodeError::UnsupportedFieldType(value)),
@@ -48,19 +48,23 @@ pub fn make_literal_value_presenter(
     }
 }
 
-fn make_single_line_field_presenter(
-    object: &Map<String, Value>,
-) -> Result<LiteralValuePresenter, DecodeError> {
-    match object.get("value") {
-        Some(Value::String(value)) => Ok(LiteralValuePresenter::SingleLineField(Some(
-            value.to_string(),
-        ))),
-        Some(Value::Null) => Ok(LiteralValuePresenter::SingleLineField(None)),
-        Some(value) => Err(DecodeError::InvalidValue {
-            field_type: FieldType::SingleLineField,
-            value,
-        }),
-        None => Ok(LiteralValuePresenter::SingleLineField(None)),
+fn do_make_literal_presenter<'a>(
+    field_type: &FieldType,
+    object: &'a Map<String, Value>,
+) -> Result<LiteralValuePresenter, DecodeError<'a>> {
+    match field_type {
+        FieldType::SingleLineField => match object.get("value") {
+            Some(Value::String(value)) => Ok(LiteralValuePresenter::SingleLineField(Some(
+                value.to_string(),
+            ))),
+            Some(Value::Null) => Ok(LiteralValuePresenter::SingleLineField(None)),
+            Some(value) => Err(DecodeError::InvalidValue {
+                field_type: FieldType::SingleLineField,
+                value,
+            }),
+            None => Ok(LiteralValuePresenter::SingleLineField(None)),
+        },
+        _ => panic!("Not implemented"),
     }
 }
 
@@ -78,8 +82,10 @@ mod tests {
         assert!(field_type != FieldType::BooleanField);
     }
 
+    // test single_line_field
+
     #[test]
-    fn test_make_single_line_field_presenter() {
+    fn test_do_make_literal_single_line_field_presenter() {
         let json = json!({
             "type": "literal",
             "field_type": "single_line_field",
@@ -87,7 +93,7 @@ mod tests {
         });
 
         let object = json.as_object().unwrap();
-        let vp = make_single_line_field_presenter(object).unwrap();
+        let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
 
         assert!(matches!(
             vp,
@@ -96,7 +102,7 @@ mod tests {
     }
 
     #[test]
-    fn test_make_single_line_field_presenter_with_null() {
+    fn test_do_make_literal_single_line_field_presenter_with_null() {
         let json = json!({
             "type": "literal",
             "field_type": "single_line_field",
@@ -104,7 +110,7 @@ mod tests {
         });
 
         let object = json.as_object().unwrap();
-        let vp = make_single_line_field_presenter(object).unwrap();
+        let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
 
         assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
 
@@ -115,13 +121,13 @@ mod tests {
         });
 
         let object = json.as_object().unwrap();
-        let vp = make_single_line_field_presenter(object).unwrap();
+        let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
 
         assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
     }
 
     #[test]
-    fn test_make_single_line_field_presenter_and_return_error() {
+    fn test_do_make_literal_single_line_field_presenter_and_return_error() {
         let json = json!({
             "type": "literal",
             "field_type": "single_line_field",
@@ -129,7 +135,7 @@ mod tests {
         });
 
         let object = json.as_object().unwrap();
-        let result = make_single_line_field_presenter(object);
+        let result = do_make_literal_presenter(&FieldType::SingleLineField, object);
 
         assert!(matches!(
             result,
