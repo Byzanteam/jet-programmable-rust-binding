@@ -1,5 +1,7 @@
 use serde_json::{json, Map, Value};
-use time::{format_description::well_known::Rfc3339, PrimitiveDateTime};
+use time::{
+    format_description::well_known::Rfc3339, macros::format_description, PrimitiveDateTime,
+};
 use uuid::Uuid;
 
 #[derive(Debug)]
@@ -169,6 +171,18 @@ impl NaiveDateTime {
         } else {
             return str.to_string().clone() + "Z";
         }
+    }
+
+    pub fn to_str(&self) -> String {
+        let format = if self.0.nanosecond() == 0 {
+            format_description!("[year]-[month]-[day]T[hour]:[minute]:[second]")
+        } else {
+            format_description!(
+                "[year]-[month]-[day]T[hour]:[minute]:[second].[subsecond digits:1+]"
+            )
+        };
+
+        self.0.format(&format).unwrap()
     }
 }
 
@@ -505,6 +519,24 @@ mod tests {
             let ndt = NaiveDateTime::from_str(&str);
 
             assert!(matches!(ndt, Err(_)));
+        }
+    }
+
+    #[test]
+    fn test_naive_date_time_to_str() {
+        {
+            let str = "2022-04-29T07:34:10";
+            let ndt = NaiveDateTime::from_str(&str);
+
+            assert_eq!(ndt.unwrap().to_str(), str);
+        }
+
+        // with nanosecond
+        {
+            let str = "2022-04-29T07:34:10.420159";
+            let ndt = NaiveDateTime::from_str(&str);
+
+            assert_eq!(ndt.unwrap().to_str(), str);
         }
     }
 
