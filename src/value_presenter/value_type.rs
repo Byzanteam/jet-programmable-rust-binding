@@ -36,6 +36,10 @@ pub struct OptionsValue {
 }
 
 impl OptionsValue {
+    pub fn count_options(&self) -> usize {
+        self.options.len() + self.other.is_some() as usize
+    }
+
     pub fn from_json(map: &Map<String, Value>) -> Result<Self, &'static str> {
         let mut options_vec = vec![];
         let mut other_option = None;
@@ -288,6 +292,49 @@ mod tests {
             let result = OptionsValue::from_json(object);
 
             assert!(matches!(result, Err(_)));
+        }
+    }
+
+    #[test]
+    fn test_count_options_of_options_value() {
+        // only options
+        {
+            let options_value = OptionsValue {
+                options: vec![String::from("option1"), String::from("option2")],
+                other: None,
+            };
+
+            assert!(options_value.count_options() == 2);
+        }
+
+        // only other
+        {
+            let options_value = OptionsValue {
+                options: vec![],
+                other: Some(String::from("other")),
+            };
+
+            assert!(options_value.count_options() == 1);
+        }
+
+        // options and other
+        {
+            let options_value = OptionsValue {
+                options: vec![String::from("option1"), String::from("option2")],
+                other: Some(String::from("other")),
+            };
+
+            assert!(options_value.count_options() == 3);
+        }
+
+        // empty
+        {
+            let options_value = OptionsValue {
+                options: vec![],
+                other: None,
+            };
+
+            assert!(options_value.count_options() == 0);
         }
     }
 
