@@ -92,6 +92,23 @@ fn do_make_literal_presenter<'a>(
             },
             None => Ok(LiteralValuePresenter::CheckboxField(None)),
         },
+        FieldType::DateTimeField => match object.get("value") {
+            Some(value) => match value {
+                Value::String(str) => match NaiveDateTime::from_str(str) {
+                    Ok(datetime) => Ok(LiteralValuePresenter::DateTimeField(Some(datetime))),
+                    Err(_err) => Err(DecodeError::InvalidValue {
+                        field_type: FieldType::DateTimeField,
+                        value,
+                    }),
+                },
+                Value::Null => Ok(LiteralValuePresenter::DateTimeField(None)),
+                _value => Err(DecodeError::InvalidValue {
+                    field_type: FieldType::DateTimeField,
+                    value,
+                }),
+            },
+            None => Ok(LiteralValuePresenter::DateTimeField(None)),
+        },
         _ => panic!("Not implemented"),
     }
 }
@@ -100,6 +117,7 @@ fn do_make_literal_presenter<'a>(
 mod tests {
     use super::*;
     use serde_json::json;
+    use time::macros::datetime;
 
     #[test]
     fn test_field_type_matches() {
@@ -320,6 +338,75 @@ mod tests {
 
             let object = json.as_object().unwrap();
             let result = do_make_literal_presenter(&FieldType::SingleLineField, object);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    // test date_time_field
+
+    #[test]
+    fn test_do_make_literal_date_time_field_presenter() {
+        let expected = datetime!(2022-04-29 07:34:10.420159);
+
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_field",
+                "value": "2022-04-29T07:34:10.420159"
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::DateTimeField, object).unwrap();
+
+            assert!(
+                matches!(vp, LiteralValuePresenter::DateTimeField(Some(NaiveDateTime(value))) if value == expected)
+            );
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_field",
+                "value": null
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::DateTimeField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::DateTimeField(None)));
+        }
+
+        // value is not present, so we should get None
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_field"
+            });
+
+            let object = json.as_object().unwrap();
+            let vp = do_make_literal_presenter(&FieldType::DateTimeField, object).unwrap();
+
+            assert!(matches!(vp, LiteralValuePresenter::DateTimeField(None)));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_field",
+                "value": 123
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::DateTimeField, object);
 
             assert!(matches!(
                 result,
