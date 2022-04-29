@@ -2,7 +2,17 @@ use serde_json::{Map, Value};
 use time::{format_description::well_known::Rfc3339, PrimitiveDateTime};
 use uuid::Uuid;
 
-pub type UuidV4 = Uuid;
+#[derive(Debug)]
+pub struct UuidV4(pub Uuid);
+
+impl UuidV4 {
+    pub fn from_str(str: &str) -> Result<Self, &'static str> {
+        match Uuid::parse_str(str) {
+            Ok(uuid) => Ok(UuidV4(uuid)),
+            Err(_) => Err("invalid uuid"),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct UserBoundary {
@@ -111,7 +121,7 @@ mod tests {
     use super::*;
     use serde_json::json;
     use time::macros::datetime;
-    use uuid::{uuid, Uuid};
+    use uuid::uuid;
 
     #[test]
     fn test_user_boundary_is_empty() {
@@ -123,7 +133,7 @@ mod tests {
 
         assert!(empty.is_empty());
 
-        let uuid: Uuid = uuid!("00000000-0000-0000-0000-ffff00000000");
+        let uuid = UuidV4(uuid!("00000000-0000-0000-0000-ffff00000000"));
 
         let user_boundary = UserBoundary {
             user_uuids: vec![uuid],
@@ -372,6 +382,23 @@ mod tests {
             let ndt = NaiveDateTime::from_str(&str);
 
             assert!(matches!(ndt, Err(_)));
+        }
+    }
+
+    #[test]
+    fn test_make_uuid_v4() {
+        {
+            let result = UuidV4::from_str("67e55044-10b1-426f-9247-bb680e5fe0c8");
+            let expected = uuid!("67e55044-10b1-426f-9247-bb680e5fe0c8");
+
+            assert!(matches!(result, Ok(UuidV4(uuid)) if uuid == expected));
+        }
+
+        // invalid str
+        {
+            let result = UuidV4::from_str("67e5504410b1-426f-9247-bb680e5fe0c8");
+
+            assert!(matches!(result, Err(_)));
         }
     }
 }
