@@ -160,6 +160,25 @@ fn do_make_literal_presenter<'a>(
             },
             None => Ok(LiteralValuePresenter::TableRowField(None)),
         },
+        FieldType::UserBoundaryField => match object.get("value") {
+            Some(value) => match value {
+                Value::Object(array) => match UserBoundary::from_json(array) {
+                    Ok(user_boundary) => Ok(LiteralValuePresenter::UserBoundaryField(Some(
+                        user_boundary,
+                    ))),
+                    Err(_err) => Err(DecodeError::InvalidValue {
+                        field_type: FieldType::UserBoundaryField,
+                        value,
+                    }),
+                },
+                Value::Null => Ok(LiteralValuePresenter::UserBoundaryField(None)),
+                value => Err(DecodeError::InvalidValue {
+                    field_type: FieldType::UserBoundaryField,
+                    value,
+                }),
+            },
+            None => Ok(LiteralValuePresenter::UserBoundaryField(None)),
+        },
         _ => panic!("Not implemented"),
     }
 }
@@ -712,6 +731,85 @@ mod tests {
 
             let object = json.as_object().unwrap();
             let result = do_make_literal_presenter(&FieldType::TableRowField, object);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    // test user_boundary_field
+    #[test]
+    fn test_do_make_literal_user_boundary_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "user_boundary_field",
+                "value": {
+                    "user_uuids": ["67e55044-10b1-426f-9247-bb680e5fe0c8"]
+                }
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::UserBoundaryField, object);
+
+            assert!(matches!(
+                result,
+                Ok(LiteralValuePresenter::UserBoundaryField(Some(UserBoundary {
+                    user_uuids,
+                    simple_department_uuids: _,
+                    penetrating_department_uuids: _
+                }))) if user_uuids.len() == 1
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "user_boundary_field",
+                "value": null
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::UserBoundaryField, object);
+
+            assert!(matches!(
+                result,
+                Ok(LiteralValuePresenter::UserBoundaryField(None))
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "user_boundary_field"
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::UserBoundaryField, object);
+
+            assert!(matches!(
+                result,
+                Ok(LiteralValuePresenter::UserBoundaryField(None))
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "user_boundary_field",
+                "value": "invalid"
+            });
+
+            let object = json.as_object().unwrap();
+            let result = do_make_literal_presenter(&FieldType::UserBoundaryField, object);
 
             assert!(matches!(
                 result,
