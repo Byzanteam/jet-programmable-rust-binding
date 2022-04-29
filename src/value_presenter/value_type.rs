@@ -16,9 +16,9 @@ impl UuidV4 {
 
 #[derive(Debug)]
 pub struct UserBoundary {
-    user_uuids: Vec<UuidV4>,
-    simple_department_uuids: Vec<UuidV4>,
-    penetrating_department_uuids: Vec<UuidV4>,
+    pub user_uuids: Vec<UuidV4>,
+    pub simple_department_uuids: Vec<UuidV4>,
+    pub penetrating_department_uuids: Vec<UuidV4>,
 }
 
 impl UserBoundary {
