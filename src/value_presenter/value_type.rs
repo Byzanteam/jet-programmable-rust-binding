@@ -79,7 +79,7 @@ impl OptionsValue {
 }
 
 #[derive(Debug)]
-pub struct NaiveDateTime(PrimitiveDateTime);
+pub struct NaiveDateTime(pub PrimitiveDateTime);
 
 impl NaiveDateTime {
     pub fn from_str(str: &str) -> Result<Self, &'static str> {
