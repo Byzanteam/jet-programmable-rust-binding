@@ -1,4 +1,4 @@
-use serde_json::{Map, Value};
+use serde_json::{json, Map, Value};
 use time::{format_description::well_known::Rfc3339, PrimitiveDateTime};
 use uuid::Uuid;
 
@@ -141,6 +141,10 @@ impl OptionsValue {
             options: options_vec,
             other: other_option,
         })
+    }
+
+    pub fn to_json(&self) -> Value {
+        json!({ "options": self.options, "other": self.other, })
     }
 }
 

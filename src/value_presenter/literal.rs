@@ -41,6 +41,13 @@ impl LiteralValuePresenter {
                     "value": value,
                 })
             }
+            LiteralValuePresenter::CheckboxField(value) => {
+                json!({
+                    "type": "literal",
+                    "field_type": FieldType::CheckboxField.to_str(),
+                    "value": value.as_ref().map(|v| v.to_json()),
+                })
+            }
             _ => panic!("Not implemented"),
         }
     }
@@ -848,6 +855,40 @@ mod tests {
             let vp = LiteralValuePresenter::BooleanField(None);
             let str = vp.to_json().to_string();
             let expected = json!({"type": "literal", "field_type": "BOOLEAN_FIELD", "value": null});
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    #[test]
+    fn test_literal_checkbox_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::CheckboxField(Some(OptionsValue {
+                options: vec![String::from("option1"), String::from("option2")],
+                other: Some(String::from("other")),
+            }));
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "CHECKBOX_FIELD",
+                "value": {"options": ["option1", "option2"], "other": "other"}
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        // empty options and other
+        {
+            let vp = LiteralValuePresenter::CheckboxField(Some(OptionsValue {
+                options: vec![],
+                other: None,
+            }));
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "CHECKBOX_FIELD",
+                "value": {"options": [], "other": null}
+            });
 
             assert!(str == expected.to_string());
         }
