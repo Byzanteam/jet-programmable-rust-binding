@@ -14,6 +14,10 @@ impl UuidV4 {
             Err(_) => Err("invalid uuid"),
         }
     }
+
+    pub fn to_str(&self) -> String {
+        self.0.hyphenated().to_string()
+    }
 }
 
 #[derive(Debug)]
@@ -550,6 +554,24 @@ mod tests {
         }
 
         // invalid str
+        {
+            let result = UuidV4::from_str("67e5504410b1-426f-9247-bb680e5fe0c8");
+
+            assert!(matches!(result, Err(_)));
+        }
+    }
+
+    #[test]
+    fn test_uuid_to_str() {
+        // simple
+        {
+            let result = UuidV4::from_str("67e5504410b1426f9247bb680e5fe0c8");
+            let expected = uuid!("67e55044-10b1-426f-9247-bb680e5fe0c8");
+
+            assert!(matches!(result, Ok(UuidV4(uuid)) if uuid == expected));
+        }
+
+        // hyphenated
         {
             let result = UuidV4::from_str("67e5504410b1-426f-9247-bb680e5fe0c8");
 
