@@ -69,6 +69,13 @@ impl LiteralValuePresenter {
                     "value": value.as_ref().map(|v| v.to_json()),
                 })
             }
+            LiteralValuePresenter::SingleLineField(value) => {
+                json!({
+                    "type": "literal",
+                    "field_type": FieldType::SingleLineField.to_str(),
+                    "value": value,
+                })
+            }
             _ => panic!("Not implemented"),
         }
     }
@@ -1048,6 +1055,28 @@ mod tests {
                 "field_type": "RADIO_BUTTON_FIELD",
                 "value": {"options": [], "other": null}
             });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    #[test]
+    fn test_literal_single_line_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::SingleLineField(Some(String::from("hello")));
+            let str = vp.to_json().to_string();
+            let expected =
+                json!({"type": "literal", "field_type": "SINGLE_LINE_FIELD", "value": "hello"});
+
+            assert!(str == expected.to_string());
+        }
+
+        // null value
+        {
+            let vp = LiteralValuePresenter::SingleLineField(None);
+            let str = vp.to_json().to_string();
+            let expected =
+                json!({"type": "literal", "field_type": "SINGLE_LINE_FIELD", "value": null});
 
             assert!(str == expected.to_string());
         }
