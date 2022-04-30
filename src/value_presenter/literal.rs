@@ -62,6 +62,13 @@ impl LiteralValuePresenter {
                     "value": value
                 })
             }
+            LiteralValuePresenter::RadioButtonField(value) => {
+                json!({
+                    "type": "literal",
+                    "field_type": FieldType::RadioButtonField.to_str(),
+                    "value": value.as_ref().map(|v| v.to_json()),
+                })
+            }
             _ => panic!("Not implemented"),
         }
     }
@@ -991,6 +998,56 @@ mod tests {
                 }"#,
             )
             .unwrap();
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    #[test]
+    fn test_literal_radio_button_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::RadioButtonField(Some(OptionsValue {
+                options: vec![String::from("option")],
+                other: None,
+            }));
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "RADIO_BUTTON_FIELD",
+                "value": {"options": ["option"], "other": null}
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        // with other
+        {
+            let vp = LiteralValuePresenter::RadioButtonField(Some(OptionsValue {
+                options: vec![],
+                other: Some(String::from("other")),
+            }));
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "RADIO_BUTTON_FIELD",
+                "value": {"options": [], "other": "other"}
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        // empty options and other
+        {
+            let vp = LiteralValuePresenter::RadioButtonField(Some(OptionsValue {
+                options: vec![],
+                other: None,
+            }));
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "RADIO_BUTTON_FIELD",
+                "value": {"options": [], "other": null}
+            });
 
             assert!(str == expected.to_string());
         }
