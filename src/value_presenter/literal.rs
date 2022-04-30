@@ -76,6 +76,13 @@ impl LiteralValuePresenter {
                     "value": value,
                 })
             }
+            LiteralValuePresenter::TableRowField(value) => {
+                json!({
+                    "type": "literal",
+                    "field_type": FieldType::TableRowField.to_str(),
+                    "value": value.as_ref().map(|v| v.to_str()),
+                })
+            }
             _ => panic!("Not implemented"),
         }
     }
@@ -1077,6 +1084,35 @@ mod tests {
             let str = vp.to_json().to_string();
             let expected =
                 json!({"type": "literal", "field_type": "SINGLE_LINE_FIELD", "value": null});
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    #[test]
+    fn test_literal_table_row_field_value_presenter_to_json() {
+        {
+            let uuid_str = "67e55044-10b1-426f-9247-bb680e5fe0c8";
+            let vp =
+                LiteralValuePresenter::TableRowField(Some(UuidV4::from_str(uuid_str).unwrap()));
+            let str = vp.to_json().to_string();
+            let expected =
+                json!({"type": "literal", "field_type": "TABLE_ROW_FIELD", "value": uuid_str});
+
+            assert!(
+                str == expected.to_string(),
+                "str: {}, expected: {}",
+                str,
+                expected
+            );
+        }
+
+        // null value
+        {
+            let vp = LiteralValuePresenter::TableRowField(None);
+            let str = vp.to_json().to_string();
+            let expected =
+                json!({"type": "literal", "field_type": "TABLE_ROW_FIELD", "value": null});
 
             assert!(str == expected.to_string());
         }
