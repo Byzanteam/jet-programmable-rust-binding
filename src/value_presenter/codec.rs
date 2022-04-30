@@ -1,10 +1,6 @@
 use serde_json::{Map, Value};
 
-use super::{
-    error::DecodeError,
-    literal::{make_literal_value_presenter, LiteralValuePresenter},
-    ValuePresenter,
-};
+use super::{error::DecodeError, literal::make_literal_value_presenter, ValuePresenter};
 
 impl ValuePresenter {
     pub fn from_json(object: &Map<String, Value>) -> Result<Self, DecodeError> {
@@ -25,11 +21,7 @@ impl ValuePresenter {
 
     pub fn to_json(&self) -> Value {
         match self {
-            ValuePresenter::Literal(LiteralValuePresenter::SingleLineField(Some(str))) => {
-                Value::String(str.to_string())
-            }
-            ValuePresenter::Literal(LiteralValuePresenter::SingleLineField(None)) => Value::Null,
-            _other => panic!("Unsupported value presenter"),
+            ValuePresenter::Literal(vp) => vp.to_json(),
         }
     }
 }
