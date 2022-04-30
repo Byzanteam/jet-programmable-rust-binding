@@ -83,6 +83,13 @@ impl LiteralValuePresenter {
                     "value": value.as_ref().map(|v| v.to_str()),
                 })
             }
+            LiteralValuePresenter::UserBoundaryField(value) => {
+                json!({
+                    "type": "literal",
+                    "field_type": FieldType::UserBoundaryField.to_str(),
+                    "value": value.as_ref().map(|v| v.to_json()),
+                })
+            }
             _ => panic!("Not implemented"),
         }
     }
@@ -1113,6 +1120,58 @@ mod tests {
             let str = vp.to_json().to_string();
             let expected =
                 json!({"type": "literal", "field_type": "TABLE_ROW_FIELD", "value": null});
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    #[test]
+    fn test_literal_user_boundary_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::UserBoundaryField(Some(UserBoundary {
+                user_uuids: vec![UuidV4::from_str("00000000-0000-0000-0000-ffff00000000").unwrap()],
+                simple_department_uuids: vec![
+                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000001").unwrap(),
+                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000002").unwrap(),
+                ],
+                penetrating_department_uuids: vec![
+                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000003").unwrap(),
+                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000004").unwrap(),
+                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000005").unwrap(),
+                ],
+            }));
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "USER_BOUNDARY_FIELD",
+                "value": {
+                    "user_uuids": [
+                        "00000000-0000-0000-0000-ffff00000000",
+                    ],
+                    "simple_department_uuids": [
+                        "00000000-0000-0000-0000-ffff00000001",
+                        "00000000-0000-0000-0000-ffff00000002",
+                    ],
+                    "penetrating_department_uuids": [
+                        "00000000-0000-0000-0000-ffff00000003",
+                        "00000000-0000-0000-0000-ffff00000004",
+                        "00000000-0000-0000-0000-ffff00000005",
+                    ],
+                }
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        // null value
+        {
+            let vp = LiteralValuePresenter::UserBoundaryField(None);
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "USER_BOUNDARY_FIELD",
+                "value": null
+            });
 
             assert!(str == expected.to_string());
         }

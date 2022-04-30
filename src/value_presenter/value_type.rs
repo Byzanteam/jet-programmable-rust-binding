@@ -93,6 +93,18 @@ impl UserBoundary {
 
         Ok(uuids)
     }
+
+    pub fn to_json(&self) -> Value {
+        json!({
+            "user_uuids": Self::uuids_to_str_vec(&self.user_uuids),
+            "simple_department_uuids": Self::uuids_to_str_vec(&self.simple_department_uuids),
+            "penetrating_department_uuids": Self::uuids_to_str_vec(&self.penetrating_department_uuids),
+        })
+    }
+
+    fn uuids_to_str_vec(uuids: &[UuidV4]) -> Vec<String> {
+        uuids.iter().map(|uuid| uuid.to_str()).collect::<Vec<_>>()
+    }
 }
 
 type OptionValue = String;
