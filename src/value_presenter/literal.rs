@@ -55,6 +55,13 @@ impl LiteralValuePresenter {
                     "value": value.as_ref().map(|v| v.to_str()),
                 })
             }
+            LiteralValuePresenter::NumericField(value) => {
+                json!({
+                    "type": "literal",
+                    "field_type": FieldType::NumericField.to_str(),
+                    "value": value
+                })
+            }
             _ => panic!("Not implemented"),
         }
     }
@@ -921,7 +928,7 @@ mod tests {
             let str = vp.to_json().to_string();
             let expected = json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00.123456"});
 
-            assert!(str == expected.to_string(), "actual: {}", str);
+            assert!(str == expected.to_string());
         }
 
         {
@@ -929,6 +936,61 @@ mod tests {
             let str = vp.to_json().to_string();
             let expected =
                 json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": null});
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    #[test]
+    fn test_literal_numeric_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::NumericField(Some(Number::from(123)));
+            let str = vp.to_json().to_string();
+
+            let expected: Value = serde_json::from_str(
+                r#"
+                {
+                    "type": "literal",
+                    "field_type": "NUMERIC_FIELD",
+                    "value": 123
+                }"#,
+            )
+            .unwrap();
+
+            assert!(str == expected.to_string());
+        }
+
+        // float
+        {
+            let vp = LiteralValuePresenter::NumericField(Number::from_f64(123.1 as f64));
+            let str = vp.to_json().to_string();
+            let expected: Value = serde_json::from_str(
+                r#"
+                {
+                    "type": "literal",
+                    "field_type": "NUMERIC_FIELD",
+                    "value": 123.1
+                }"#,
+            )
+            .unwrap();
+
+            assert!(str == expected.to_string());
+        }
+
+        // null
+        {
+            let vp = LiteralValuePresenter::NumericField(None);
+            let str = vp.to_json().to_string();
+
+            let expected: Value = serde_json::from_str(
+                r#"
+                {
+                    "type": "literal",
+                    "field_type": "NUMERIC_FIELD",
+                    "value": null
+                }"#,
+            )
+            .unwrap();
 
             assert!(str == expected.to_string());
         }
