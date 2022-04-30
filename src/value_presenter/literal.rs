@@ -90,7 +90,6 @@ impl LiteralValuePresenter {
                     "value": value.as_ref().map(|v| v.to_json()),
                 })
             }
-            _ => panic!("Not implemented"),
         }
     }
 }
