@@ -99,9 +99,9 @@ pub fn make_literal_value_presenter(
 ) -> Result<LiteralValuePresenter, DecodeError> {
     match object.get("field_type") {
         Some(value) => match value {
-            Value::String(ref field_type) => match FieldType::from_str(field_type) {
-                Some(ref field_type) => do_make_literal_presenter(field_type, object),
-                _ => Err(DecodeError::UnsupportedFieldType(value)),
+            Value::String(ref field_type) => match FieldType::parse_str(field_type) {
+                Ok(ref field_type) => do_make_literal_presenter(field_type, object),
+                Err(_err) => Err(DecodeError::UnsupportedFieldType(value)),
             },
             value => Err(DecodeError::UnsupportedFieldType(value)),
         },
@@ -144,7 +144,7 @@ fn do_make_literal_presenter<'a>(
         },
         FieldType::DateTimeField => match object.get("value") {
             Some(value) => match value {
-                Value::String(str) => match NaiveDateTime::from_str(str) {
+                Value::String(str) => match NaiveDateTime::parse_str(str) {
                     Ok(datetime) => Ok(LiteralValuePresenter::DateTimeField(Some(datetime))),
                     Err(_err) => Err(DecodeError::InvalidValue {
                         field_type: FieldType::DateTimeField,
@@ -206,7 +206,7 @@ fn do_make_literal_presenter<'a>(
         },
         FieldType::TableRowField => match object.get("value") {
             Some(value) => match value {
-                Value::String(str) => match UuidV4::from_str(str) {
+                Value::String(str) => match UuidV4::parse_str(str) {
                     Ok(uuid) => Ok(LiteralValuePresenter::TableRowField(Some(uuid))),
                     Err(_err) => Err(DecodeError::InvalidValue {
                         field_type: FieldType::TableRowField,
@@ -939,7 +939,7 @@ mod tests {
     fn test_literal_date_time_field_value_presenter_to_json() {
         {
             let vp = LiteralValuePresenter::DateTimeField(Some(
-                NaiveDateTime::from_str("2020-01-01T00:00:00Z").unwrap(),
+                NaiveDateTime::parse_str("2020-01-01T00:00:00Z").unwrap(),
             ));
             let str = vp.to_json().to_string();
             let expected = json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00"});
@@ -950,7 +950,7 @@ mod tests {
         // with ms
         {
             let vp = LiteralValuePresenter::DateTimeField(Some(
-                NaiveDateTime::from_str("2020-01-01T00:00:00.123456Z").unwrap(),
+                NaiveDateTime::parse_str("2020-01-01T00:00:00.123456Z").unwrap(),
             ));
             let str = vp.to_json().to_string();
             let expected = json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00.123456"});
@@ -1100,7 +1100,7 @@ mod tests {
         {
             let uuid_str = "67e55044-10b1-426f-9247-bb680e5fe0c8";
             let vp =
-                LiteralValuePresenter::TableRowField(Some(UuidV4::from_str(uuid_str).unwrap()));
+                LiteralValuePresenter::TableRowField(Some(UuidV4::parse_str(uuid_str).unwrap()));
             let str = vp.to_json().to_string();
             let expected =
                 json!({"type": "literal", "field_type": "TABLE_ROW_FIELD", "value": uuid_str});
@@ -1128,15 +1128,15 @@ mod tests {
     fn test_literal_user_boundary_value_presenter_to_json() {
         {
             let vp = LiteralValuePresenter::UserBoundaryField(Some(UserBoundary {
-                user_uuids: vec![UuidV4::from_str("00000000-0000-0000-0000-ffff00000000").unwrap()],
+                user_uuids: vec![UuidV4::parse_str("00000000-0000-0000-0000-ffff00000000").unwrap()],
                 simple_department_uuids: vec![
-                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000001").unwrap(),
-                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000002").unwrap(),
+                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000001").unwrap(),
+                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000002").unwrap(),
                 ],
                 penetrating_department_uuids: vec![
-                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000003").unwrap(),
-                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000004").unwrap(),
-                    UuidV4::from_str("00000000-0000-0000-0000-ffff00000005").unwrap(),
+                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000003").unwrap(),
+                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000004").unwrap(),
+                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000005").unwrap(),
                 ],
             }));
             let str = vp.to_json().to_string();

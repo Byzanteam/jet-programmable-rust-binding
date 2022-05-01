@@ -2,10 +2,7 @@ use serde_json::Value;
 
 use crate::value_presenter::{error::DecodeError, field_type::FieldType, ValuePresenter};
 
-pub fn parse<'a>(
-    args: &'a Value,
-    types: Vec<FieldType>,
-) -> Result<Vec<ValuePresenter>, DecodeError<'a>> {
+pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>, DecodeError> {
     match args {
         Value::Array(list) => {
             let types_len = types.len();
