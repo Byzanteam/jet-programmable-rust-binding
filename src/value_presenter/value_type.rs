@@ -7,11 +7,14 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub struct UuidV4(pub Uuid);
 
+#[derive(Debug)]
+pub struct ParseUuidV4Error;
+
 impl UuidV4 {
-    pub fn from_str(str: &str) -> Result<Self, &'static str> {
+    pub fn parse_str(str: &str) -> Result<Self, ParseUuidV4Error> {
         match Uuid::parse_str(str) {
             Ok(uuid) => Ok(UuidV4(uuid)),
-            Err(_) => Err("invalid uuid"),
+            Err(_err) => Err(ParseUuidV4Error),
         }
     }
 
@@ -25,6 +28,13 @@ pub struct UserBoundary {
     pub user_uuids: Vec<UuidV4>,
     pub simple_department_uuids: Vec<UuidV4>,
     pub penetrating_department_uuids: Vec<UuidV4>,
+}
+
+#[derive(Debug)]
+pub enum ParseUserBoundaryError {
+    UserUuids,
+    SimpleDepartmentUuids,
+    PenetratingDepartmentUuids,
 }
 
 impl UserBoundary {
@@ -42,7 +52,7 @@ impl UserBoundary {
             && self.penetrating_department_uuids.len() == 0
     }
 
-    pub fn from_json(json: &Map<String, Value>) -> Result<Self, &'static str> {
+    pub fn from_json(json: &Map<String, Value>) -> Result<Self, ParseUserBoundaryError> {
         let mut user_uuids = vec![];
         let mut simple_department_uuids = vec![];
         let mut penetrating_department_uuids = vec![];
@@ -50,21 +60,21 @@ impl UserBoundary {
         if let Some(user_uuids_json) = json.get("user_uuids") {
             match Self::extract_uuids_from_json(user_uuids_json) {
                 Ok(uuids) => user_uuids = uuids,
-                Err(msg) => return Err(msg),
+                Err(_msg) => return Err(ParseUserBoundaryError::UserUuids),
             }
         }
 
         if let Some(simple_department_uuids_json) = json.get("simple_department_uuids") {
             match Self::extract_uuids_from_json(simple_department_uuids_json) {
                 Ok(uuids) => simple_department_uuids = uuids,
-                Err(msg) => return Err(msg),
+                Err(_msg) => return Err(ParseUserBoundaryError::SimpleDepartmentUuids),
             }
         }
 
         if let Some(penetrating_department_uuids_json) = json.get("penetrating_department_uuids") {
             match Self::extract_uuids_from_json(penetrating_department_uuids_json) {
                 Ok(uuids) => penetrating_department_uuids = uuids,
-                Err(msg) => return Err(msg),
+                Err(_msg) => return Err(ParseUserBoundaryError::PenetratingDepartmentUuids),
             }
         }
 
@@ -81,9 +91,9 @@ impl UserBoundary {
         match json {
             Value::Array(array) => {
                 for uuid_json in array {
-                    match UuidV4::from_str(&uuid_json.as_str().unwrap()) {
+                    match UuidV4::parse_str(uuid_json.as_str().unwrap()) {
                         Ok(uuid) => uuids.push(uuid),
-                        Err(_) => return Err("invalid uuid"),
+                        Err(_err) => return Err("invalid uuid"),
                     }
                 }
             }
@@ -115,12 +125,18 @@ pub struct OptionsValue {
     pub other: Option<OptionValue>,
 }
 
+#[derive(Debug)]
+pub enum ParseOptionsValueError {
+    Options,
+    Other,
+}
+
 impl OptionsValue {
     pub fn count_options(&self) -> usize {
         self.options.len() + self.other.is_some() as usize
     }
 
-    pub fn from_json(map: &Map<String, Value>) -> Result<Self, &'static str> {
+    pub fn from_json(map: &Map<String, Value>) -> Result<Self, ParseOptionsValueError> {
         let mut options_vec = vec![];
         let mut other_option = None;
 
@@ -132,14 +148,14 @@ impl OptionsValue {
                             options_vec.push(option.to_string());
                         }
                         _ => {
-                            return Err("options must be an array of strings");
+                            return Err(ParseOptionsValueError::Options);
                         }
                     }
                 }
             }
             Some(Value::Null) => (),
             Some(_) => {
-                return Err("options is not an array");
+                return Err(ParseOptionsValueError::Options);
             }
             None => (),
         }
@@ -150,7 +166,7 @@ impl OptionsValue {
             }
             Some(Value::Null) => (),
             Some(_) => {
-                return Err("other is not a string");
+                return Err(ParseOptionsValueError::Other);
             }
             None => (),
         }
@@ -169,23 +185,26 @@ impl OptionsValue {
 #[derive(Debug)]
 pub struct NaiveDateTime(pub PrimitiveDateTime);
 
+#[derive(Debug)]
+pub struct ParseNaiveDateTimeError;
+
 impl NaiveDateTime {
-    pub fn from_str(str: &str) -> Result<Self, &'static str> {
+    pub fn parse_str(str: &str) -> Result<Self, ParseNaiveDateTimeError> {
         // ISO 8601 string `2022-04-29T07:34:10.420159`
 
         let str = Self::normalize(str);
 
         match PrimitiveDateTime::parse(&str, &Rfc3339) {
             Ok(date) => Ok(NaiveDateTime(date)),
-            Err(_) => Err("invalid date"),
+            Err(_) => Err(ParseNaiveDateTimeError),
         }
     }
 
     fn normalize(str: &str) -> String {
-        if str.ends_with("Z") {
-            return str.to_string();
+        if str.ends_with('Z') {
+            str.to_string()
         } else {
-            return str.to_string().clone() + "Z";
+            str.to_string() + "Z"
         }
     }
 
@@ -507,7 +526,7 @@ mod tests {
 
         {
             let str = "2022-04-29T07:34:10.420159";
-            let ndt = NaiveDateTime::from_str(&str);
+            let ndt = NaiveDateTime::parse_str(&str);
 
             assert_eq!(ndt.unwrap().0, expected);
         }
@@ -515,7 +534,7 @@ mod tests {
         // with timezone
         {
             let str = "2022-04-29T07:34:10.420159Z";
-            let ndt = NaiveDateTime::from_str(&str);
+            let ndt = NaiveDateTime::parse_str(&str);
 
             assert_eq!(ndt.unwrap().0, expected);
         }
@@ -523,7 +542,7 @@ mod tests {
         // without ms
         {
             let str = "2022-04-29T07:34:10Z";
-            let ndt = NaiveDateTime::from_str(&str);
+            let ndt = NaiveDateTime::parse_str(&str);
             let expected = datetime!(2022-04-29 07:34:10);
 
             assert_eq!(ndt.unwrap().0, expected);
@@ -532,7 +551,7 @@ mod tests {
         // invalid str
         {
             let str = "2022-04-29 07:34";
-            let ndt = NaiveDateTime::from_str(&str);
+            let ndt = NaiveDateTime::parse_str(&str);
 
             assert!(matches!(ndt, Err(_)));
         }
@@ -542,7 +561,7 @@ mod tests {
     fn test_naive_date_time_to_str() {
         {
             let str = "2022-04-29T07:34:10";
-            let ndt = NaiveDateTime::from_str(&str);
+            let ndt = NaiveDateTime::parse_str(&str);
 
             assert_eq!(ndt.unwrap().to_str(), str);
         }
@@ -550,7 +569,7 @@ mod tests {
         // with nanosecond
         {
             let str = "2022-04-29T07:34:10.420159";
-            let ndt = NaiveDateTime::from_str(&str);
+            let ndt = NaiveDateTime::parse_str(&str);
 
             assert_eq!(ndt.unwrap().to_str(), str);
         }
@@ -559,7 +578,7 @@ mod tests {
     #[test]
     fn test_make_uuid_v4() {
         {
-            let result = UuidV4::from_str("67e55044-10b1-426f-9247-bb680e5fe0c8");
+            let result = UuidV4::parse_str("67e55044-10b1-426f-9247-bb680e5fe0c8");
             let expected = uuid!("67e55044-10b1-426f-9247-bb680e5fe0c8");
 
             assert!(matches!(result, Ok(UuidV4(uuid)) if uuid == expected));
@@ -567,7 +586,7 @@ mod tests {
 
         // invalid str
         {
-            let result = UuidV4::from_str("67e5504410b1-426f-9247-bb680e5fe0c8");
+            let result = UuidV4::parse_str("67e5504410b1-426f-9247-bb680e5fe0c8");
 
             assert!(matches!(result, Err(_)));
         }
@@ -577,7 +596,7 @@ mod tests {
     fn test_uuid_to_str() {
         // simple
         {
-            let result = UuidV4::from_str("67e5504410b1426f9247bb680e5fe0c8");
+            let result = UuidV4::parse_str("67e5504410b1426f9247bb680e5fe0c8");
             let expected = uuid!("67e55044-10b1-426f-9247-bb680e5fe0c8");
 
             assert!(matches!(result, Ok(UuidV4(uuid)) if uuid == expected));
@@ -585,7 +604,7 @@ mod tests {
 
         // hyphenated
         {
-            let result = UuidV4::from_str("67e5504410b1-426f-9247-bb680e5fe0c8");
+            let result = UuidV4::parse_str("67e5504410b1-426f-9247-bb680e5fe0c8");
 
             assert!(matches!(result, Err(_)));
         }
