@@ -1,8 +1,8 @@
 //! Scaffolding for a guest application.
 
 use crate::{
-    arguments::parse,
     hostcalls::hostcall_set_outputs,
+    inputs::parse,
     outputs::Outputs,
     value_presenter::{field_type::FieldType, ValuePresenter},
 };

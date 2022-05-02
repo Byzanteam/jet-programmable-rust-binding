@@ -10,7 +10,7 @@ pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>,
             let pairs = types.into_iter().zip(list.iter());
 
             if pairs.len() != types_len {
-                panic!("Invalid number of arguments");
+                panic!("Invalid number of inputs");
             }
 
             let mut result: Vec<ValuePresenter> = Vec::new();
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Invalid number of arguments")]
+    #[should_panic(expected = "Invalid number of inputs")]
     fn test_parse_valid_json_with_too_much_types() {
         let args = json!([
             {

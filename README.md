@@ -12,7 +12,7 @@ use jet_programmable_rust_binding::{
 };
 
 fn entrypoint(inputs: Vec<ValuePresenter>) -> Outputs {
-    Outputs(inputs)
+    Outputs::build(inputs)
 }
 
 program!(entrypoint, vec![FieldType::SingleLineField]);

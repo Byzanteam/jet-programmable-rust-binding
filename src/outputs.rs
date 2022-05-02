@@ -5,6 +5,10 @@ use crate::value_presenter::ValuePresenter;
 pub struct Outputs(pub Vec<ValuePresenter>);
 
 impl Outputs {
+    pub fn build(value_presenters: Vec<ValuePresenter>) -> Self {
+        Self(value_presenters)
+    }
+
     pub fn to_json(&self) -> Value {
         Value::Array(self.0.iter().map(|vp| vp.to_json()).collect())
     }

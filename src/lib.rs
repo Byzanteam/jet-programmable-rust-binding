@@ -1,6 +1,6 @@
 pub mod value_presenter;
 
-pub mod arguments;
+pub mod inputs;
 pub mod outputs;
 
 #[macro_use]
