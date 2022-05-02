@@ -6,7 +6,7 @@ use super::{
     value_type::{NaiveDateTime, OptionsValue, UserBoundary, UuidV4},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum LiteralValuePresenter {
     BooleanField(Option<bool>),
     CheckboxField(Option<OptionsValue>),

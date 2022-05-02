@@ -7,7 +7,7 @@ pub mod literal;
 
 use self::{field_type::FieldType, literal::LiteralValuePresenter};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ValuePresenter {
     Literal(LiteralValuePresenter),
 }

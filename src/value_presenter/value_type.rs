@@ -4,7 +4,7 @@ use time::{
 };
 use uuid::Uuid;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UuidV4(pub Uuid);
 
 #[derive(Debug)]
@@ -23,7 +23,7 @@ impl UuidV4 {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UserBoundary {
     pub user_uuids: Vec<UuidV4>,
     pub simple_department_uuids: Vec<UuidV4>,
@@ -119,7 +119,7 @@ impl UserBoundary {
 
 type OptionValue = String;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OptionsValue {
     pub options: Vec<OptionValue>,
     pub other: Option<OptionValue>,
@@ -182,7 +182,7 @@ impl OptionsValue {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NaiveDateTime(pub PrimitiveDateTime);
 
 #[derive(Debug)]
