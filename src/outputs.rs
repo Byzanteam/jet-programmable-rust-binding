@@ -16,7 +16,7 @@ impl Outputs {
 
 #[cfg(test)]
 mod tests {
-    use crate::value_presenter::literal::LiteralValuePresenter;
+    use crate::value_presenter::{field_value::BooleanFieldValue, literal::LiteralValuePresenter};
 
     use super::*;
     use serde_json::json;
@@ -24,8 +24,10 @@ mod tests {
     #[test]
     fn test_to_json() {
         let outputs = Outputs(vec![
-            ValuePresenter::Literal(LiteralValuePresenter::BooleanField(Some(true))),
-            ValuePresenter::Literal(LiteralValuePresenter::BooleanField(None)),
+            ValuePresenter::Literal(LiteralValuePresenter::BooleanField(
+                BooleanFieldValue::Value(true),
+            )),
+            ValuePresenter::Literal(LiteralValuePresenter::BooleanField(BooleanFieldValue::Nil)),
         ]);
 
         let expected = json!([

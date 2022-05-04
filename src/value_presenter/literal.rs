@@ -1,258 +1,178 @@
-use serde_json::{json, Map, Number, Value};
+use serde_json::{json, Value};
 
 use super::{
     error::DecodeError,
     field_type::FieldType,
-    value_type::{NaiveDateTime, OptionsValue, UserBoundary, UuidV4},
+    field_value::{
+        BooleanFieldValue, CheckboxFieldValue, DateTimeFieldValue, NumericFieldValue,
+        RadioButtonFieldValue, SingleLineFieldValue, TableRowFieldValue, UserBoundaryFieldValue,
+    },
+    field_value::{LiteralFieldValue, ParseLiteralFieldValueError},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LiteralValuePresenter {
-    BooleanField(Option<bool>),
-    CheckboxField(Option<OptionsValue>),
-    DateTimeField(Option<NaiveDateTime>),
-    NumericField(Option<Number>),
-    RadioButtonField(Option<OptionsValue>),
-    SingleLineField(Option<String>),
-    TableRowField(Option<UuidV4>),
-    UserBoundaryField(Option<UserBoundary>),
+    BooleanField(BooleanFieldValue),
+    CheckboxField(CheckboxFieldValue),
+    DateTimeField(DateTimeFieldValue),
+    NumericField(NumericFieldValue),
+    RadioButtonField(RadioButtonFieldValue),
+    SingleLineField(SingleLineFieldValue),
+    TableRowField(TableRowFieldValue),
+    UserBoundaryField(UserBoundaryFieldValue),
 }
 
 impl LiteralValuePresenter {
     pub fn get_field_type(&self) -> FieldType {
         match self {
-            LiteralValuePresenter::BooleanField(_) => FieldType::BooleanField,
-            LiteralValuePresenter::CheckboxField(_) => FieldType::CheckboxField,
-            LiteralValuePresenter::DateTimeField(_) => FieldType::DateTimeField,
-            LiteralValuePresenter::NumericField(_) => FieldType::NumericField,
-            LiteralValuePresenter::RadioButtonField(_) => FieldType::RadioButtonField,
-            LiteralValuePresenter::SingleLineField(_) => FieldType::SingleLineField,
-            LiteralValuePresenter::TableRowField(_) => FieldType::TableRowField,
-            LiteralValuePresenter::UserBoundaryField(_) => FieldType::UserBoundaryField,
+            LiteralValuePresenter::BooleanField(value) => value.get_field_type(),
+            LiteralValuePresenter::CheckboxField(value) => value.get_field_type(),
+            LiteralValuePresenter::DateTimeField(value) => value.get_field_type(),
+            LiteralValuePresenter::NumericField(value) => value.get_field_type(),
+            LiteralValuePresenter::RadioButtonField(value) => value.get_field_type(),
+            LiteralValuePresenter::SingleLineField(value) => value.get_field_type(),
+            LiteralValuePresenter::TableRowField(value) => value.get_field_type(),
+            LiteralValuePresenter::UserBoundaryField(value) => value.get_field_type(),
+        }
+    }
+
+    pub fn from_json(json: &Value) -> Result<Self, DecodeError> {
+        if !json.is_object() {
+            return Err(DecodeError::InvalidJsonObject(json));
+        }
+
+        match json.get("field_type") {
+            Some(field_type_value) => match field_type_value {
+                Value::String(ref field_type) => match FieldType::parse_str(field_type) {
+                    Ok(field_type) => make_literal_field_value(&field_type, json).map_err(|_err| {
+                        DecodeError::InvalidValue {
+                            field_type,
+                            value: json,
+                        }
+                    }),
+                    Err(_err) => Err(DecodeError::UnsupportedFieldType(json)),
+                },
+                _other => Err(DecodeError::UnsupportedFieldType(json)),
+            },
+            None => Err(DecodeError::NoFieldType),
         }
     }
 
     pub fn to_json(&self) -> Value {
-        match self {
-            LiteralValuePresenter::BooleanField(value) => {
-                json!({
-                    "type": "literal",
-                    "field_type": FieldType::BooleanField.to_str(),
-                    "value": value,
-                })
-            }
-            LiteralValuePresenter::CheckboxField(value) => {
-                json!({
-                    "type": "literal",
-                    "field_type": FieldType::CheckboxField.to_str(),
-                    "value": value.as_ref().map(|v| v.to_json()),
-                })
-            }
-            LiteralValuePresenter::DateTimeField(value) => {
-                json!({
-                    "type": "literal",
-                    "field_type": FieldType::DateTimeField.to_str(),
-                    "value": value.as_ref().map(|v| v.to_str()),
-                })
-            }
-            LiteralValuePresenter::NumericField(value) => {
-                json!({
-                    "type": "literal",
-                    "field_type": FieldType::NumericField.to_str(),
-                    "value": value
-                })
-            }
-            LiteralValuePresenter::RadioButtonField(value) => {
-                json!({
-                    "type": "literal",
-                    "field_type": FieldType::RadioButtonField.to_str(),
-                    "value": value.as_ref().map(|v| v.to_json()),
-                })
-            }
-            LiteralValuePresenter::SingleLineField(value) => {
-                json!({
-                    "type": "literal",
-                    "field_type": FieldType::SingleLineField.to_str(),
-                    "value": value,
-                })
-            }
-            LiteralValuePresenter::TableRowField(value) => {
-                json!({
-                    "type": "literal",
-                    "field_type": FieldType::TableRowField.to_str(),
-                    "value": value.as_ref().map(|v| v.to_str()),
-                })
-            }
-            LiteralValuePresenter::UserBoundaryField(value) => {
-                json!({
-                    "type": "literal",
-                    "field_type": FieldType::UserBoundaryField.to_str(),
-                    "value": value.as_ref().map(|v| v.to_json()),
-                })
-            }
-        }
+        let value = match self {
+            LiteralValuePresenter::BooleanField(value) => value.to_json(),
+            LiteralValuePresenter::CheckboxField(value) => value.to_json(),
+            LiteralValuePresenter::DateTimeField(value) => value.to_json(),
+            LiteralValuePresenter::NumericField(value) => value.to_json(),
+            LiteralValuePresenter::RadioButtonField(value) => value.to_json(),
+            LiteralValuePresenter::SingleLineField(value) => value.to_json(),
+            LiteralValuePresenter::TableRowField(value) => value.to_json(),
+            LiteralValuePresenter::UserBoundaryField(value) => value.to_json(),
+        };
+
+        json!({
+            "type": "literal",
+            "field_type": self.get_field_type().to_str(),
+            "value": value,
+        })
     }
 }
 
-pub fn make_literal_value_presenter(
-    object: &Map<String, Value>,
-) -> Result<LiteralValuePresenter, DecodeError> {
-    match object.get("field_type") {
-        Some(value) => match value {
-            Value::String(ref field_type) => match FieldType::parse_str(field_type) {
-                Ok(ref field_type) => do_make_literal_presenter(field_type, object),
-                Err(_err) => Err(DecodeError::UnsupportedFieldType(value)),
-            },
-            value => Err(DecodeError::UnsupportedFieldType(value)),
-        },
-        None => Err(DecodeError::NoFieldType),
-    }
-}
-
-fn do_make_literal_presenter<'a>(
+fn make_literal_field_value(
     field_type: &FieldType,
-    object: &'a Map<String, Value>,
-) -> Result<LiteralValuePresenter, DecodeError<'a>> {
+    value: &Value,
+) -> Result<LiteralValuePresenter, ParseLiteralFieldValueError> {
+    if !value.is_object() {
+        return Err(ParseLiteralFieldValueError);
+    }
+
     match field_type {
-        FieldType::BooleanField => match object.get("value") {
-            Some(Value::Bool(value)) => Ok(LiteralValuePresenter::BooleanField(Some(*value))),
-            Some(Value::Null) => Ok(LiteralValuePresenter::BooleanField(None)),
-            Some(value) => Err(DecodeError::InvalidValue {
-                field_type: FieldType::BooleanField,
-                value,
-            }),
-            None => Ok(LiteralValuePresenter::BooleanField(None)),
-        },
-        FieldType::CheckboxField => match object.get("value") {
-            Some(value) => match value {
-                Value::Object(object) => match OptionsValue::from_json(object) {
-                    Ok(options_value) => {
-                        Ok(LiteralValuePresenter::CheckboxField(Some(options_value)))
-                    }
-                    Err(_err) => Err(DecodeError::InvalidValue {
-                        field_type: FieldType::CheckboxField,
-                        value,
-                    }),
-                },
-                Value::Null => Ok(LiteralValuePresenter::CheckboxField(None)),
-                _value => Err(DecodeError::InvalidValue {
-                    field_type: FieldType::CheckboxField,
-                    value,
-                }),
-            },
-            None => Ok(LiteralValuePresenter::CheckboxField(None)),
-        },
-        FieldType::DateTimeField => match object.get("value") {
-            Some(value) => match value {
-                Value::String(str) => match NaiveDateTime::parse_str(str) {
-                    Ok(datetime) => Ok(LiteralValuePresenter::DateTimeField(Some(datetime))),
-                    Err(_err) => Err(DecodeError::InvalidValue {
-                        field_type: FieldType::DateTimeField,
-                        value,
-                    }),
-                },
-                Value::Null => Ok(LiteralValuePresenter::DateTimeField(None)),
-                _value => Err(DecodeError::InvalidValue {
-                    field_type: FieldType::DateTimeField,
-                    value,
-                }),
-            },
-            None => Ok(LiteralValuePresenter::DateTimeField(None)),
-        },
-        FieldType::NumericField => match object.get("value") {
-            Some(Value::Number(number)) => {
-                Ok(LiteralValuePresenter::NumericField(Some(number.to_owned())))
+        FieldType::BooleanField => match value.get("value") {
+            Some(value) => {
+                BooleanFieldValue::from_json(value).map(LiteralValuePresenter::BooleanField)
             }
-            Some(Value::Null) => Ok(LiteralValuePresenter::NumericField(None)),
-            Some(value) => Err(DecodeError::InvalidValue {
-                field_type: FieldType::NumericField,
-                value,
-            }),
-            None => Ok(LiteralValuePresenter::NumericField(None)),
+            None => Ok(LiteralValuePresenter::BooleanField(BooleanFieldValue::Nil)),
         },
-        FieldType::RadioButtonField => match object.get("value") {
-            Some(value) => match value {
-                Value::Object(object) => match OptionsValue::from_json(object) {
-                    Ok(options_value) if options_value.count_options() <= 1 => {
-                        Ok(LiteralValuePresenter::RadioButtonField(Some(options_value)))
+        FieldType::CheckboxField => match value.get("value") {
+            Some(value) => {
+                CheckboxFieldValue::from_json(value).map(LiteralValuePresenter::CheckboxField)
+            }
+            None => Ok(LiteralValuePresenter::CheckboxField(
+                CheckboxFieldValue::Nil,
+            )),
+        },
+        FieldType::DateTimeField => match value.get("value") {
+            Some(value) => {
+                DateTimeFieldValue::from_json(value).map(LiteralValuePresenter::DateTimeField)
+            }
+            None => Ok(LiteralValuePresenter::DateTimeField(
+                DateTimeFieldValue::Nil,
+            )),
+        },
+        FieldType::NumericField => match value.get("value") {
+            Some(value) => {
+                NumericFieldValue::from_json(value).map(LiteralValuePresenter::NumericField)
+            }
+            None => Ok(LiteralValuePresenter::NumericField(NumericFieldValue::Nil)),
+        },
+        FieldType::RadioButtonField => match value.get("value") {
+            Some(value) => RadioButtonFieldValue::from_json(value)
+                .and_then(|field_value| match field_value {
+                    RadioButtonFieldValue::Nil => Ok(field_value),
+                    RadioButtonFieldValue::Value(ref options_value) => {
+                        if options_value.count_options() <= 1 {
+                            Ok(field_value)
+                        } else {
+                            Err(ParseLiteralFieldValueError)
+                        }
                     }
-                    Ok(_options_value) => Err(DecodeError::InvalidValue {
-                        field_type: FieldType::RadioButtonField,
-                        value,
-                    }),
-                    Err(_err) => Err(DecodeError::InvalidValue {
-                        field_type: FieldType::RadioButtonField,
-                        value,
-                    }),
-                },
-                Value::Null => Ok(LiteralValuePresenter::RadioButtonField(None)),
-                _value => Err(DecodeError::InvalidValue {
-                    field_type: FieldType::RadioButtonField,
-                    value,
-                }),
-            },
-            None => Ok(LiteralValuePresenter::RadioButtonField(None)),
+                })
+                .map(LiteralValuePresenter::RadioButtonField),
+            None => Ok(LiteralValuePresenter::RadioButtonField(
+                RadioButtonFieldValue::Nil,
+            )),
         },
-        FieldType::SingleLineField => match object.get("value") {
-            Some(Value::String(value)) => Ok(LiteralValuePresenter::SingleLineField(Some(
-                value.to_string(),
-            ))),
-            Some(Value::Null) => Ok(LiteralValuePresenter::SingleLineField(None)),
-            Some(value) => Err(DecodeError::InvalidValue {
-                field_type: FieldType::SingleLineField,
-                value,
-            }),
-            None => Ok(LiteralValuePresenter::SingleLineField(None)),
+        FieldType::SingleLineField => match value.get("value") {
+            Some(value) => {
+                SingleLineFieldValue::from_json(value).map(LiteralValuePresenter::SingleLineField)
+            }
+            None => Ok(LiteralValuePresenter::SingleLineField(
+                SingleLineFieldValue::Nil,
+            )),
         },
-        FieldType::TableRowField => match object.get("value") {
-            Some(value) => match value {
-                Value::String(str) => match UuidV4::parse_str(str) {
-                    Ok(uuid) => Ok(LiteralValuePresenter::TableRowField(Some(uuid))),
-                    Err(_err) => Err(DecodeError::InvalidValue {
-                        field_type: FieldType::TableRowField,
-                        value,
-                    }),
-                },
-                Value::Null => Ok(LiteralValuePresenter::TableRowField(None)),
-                value => Err(DecodeError::InvalidValue {
-                    field_type: FieldType::TableRowField,
-                    value,
-                }),
-            },
-            None => Ok(LiteralValuePresenter::TableRowField(None)),
+        FieldType::TableRowField => match value.get("value") {
+            Some(value) => {
+                TableRowFieldValue::from_json(value).map(LiteralValuePresenter::TableRowField)
+            }
+            None => Ok(LiteralValuePresenter::TableRowField(
+                TableRowFieldValue::Nil,
+            )),
         },
-        FieldType::UserBoundaryField => match object.get("value") {
-            Some(value) => match value {
-                Value::Object(array) => match UserBoundary::from_json(array) {
-                    Ok(user_boundary) => Ok(LiteralValuePresenter::UserBoundaryField(Some(
-                        user_boundary,
-                    ))),
-                    Err(_err) => Err(DecodeError::InvalidValue {
-                        field_type: FieldType::UserBoundaryField,
-                        value,
-                    }),
-                },
-                Value::Null => Ok(LiteralValuePresenter::UserBoundaryField(None)),
-                value => Err(DecodeError::InvalidValue {
-                    field_type: FieldType::UserBoundaryField,
-                    value,
-                }),
-            },
-            None => Ok(LiteralValuePresenter::UserBoundaryField(None)),
+        FieldType::UserBoundaryField => match value.get("value") {
+            Some(value) => UserBoundaryFieldValue::from_json(value)
+                .map(LiteralValuePresenter::UserBoundaryField),
+            None => Ok(LiteralValuePresenter::UserBoundaryField(
+                UserBoundaryFieldValue::Nil,
+            )),
         },
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::value_presenter::value::{
+        naive_date_time::NaiveDateTime, number::Number, options_value::OptionsValue,
+        user_boundary::UserBoundary, uuid::Uuid,
+    };
+
     use super::*;
     use serde_json::json;
-    use time::macros::datetime;
-    use uuid::uuid;
 
     #[test]
-    fn test_field_type_matches() {
-        let vp = LiteralValuePresenter::SingleLineField(Some("value".to_string()));
+    fn test_get_field_type() {
+        let vp = LiteralValuePresenter::SingleLineField(SingleLineFieldValue::Value(
+            "value".to_string(),
+        ));
         let field_type = vp.get_field_type();
 
         assert!(field_type == FieldType::SingleLineField);
@@ -262,7 +182,7 @@ mod tests {
     // test boolean_field
 
     #[test]
-    fn test_do_make_literal_boolean_field_presenter() {
+    fn test_make_literal_boolean_field_presenter() {
         // test true value
         {
             let json = json!({
@@ -271,12 +191,11 @@ mod tests {
                 "value": true
             });
 
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::BooleanField, object).unwrap();
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
 
             assert!(matches!(
                 vp,
-                LiteralValuePresenter::BooleanField(Some(true))
+                LiteralValuePresenter::BooleanField(BooleanFieldValue::Value(true))
             ));
         }
 
@@ -288,12 +207,11 @@ mod tests {
                 "value": false
             });
 
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::BooleanField, object).unwrap();
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
 
             assert!(matches!(
                 vp,
-                LiteralValuePresenter::BooleanField(Some(false))
+                LiteralValuePresenter::BooleanField(BooleanFieldValue::Value(false))
             ));
         }
 
@@ -305,10 +223,12 @@ mod tests {
                 "value": null
             });
 
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::BooleanField, object).unwrap();
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
 
-            assert!(matches!(vp, LiteralValuePresenter::BooleanField(None)));
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::BooleanField(BooleanFieldValue::Nil)
+            ));
         }
 
         // value is not present
@@ -318,10 +238,12 @@ mod tests {
                 "field_type": "boolean_field",
             });
 
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::BooleanField, object).unwrap();
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
 
-            assert!(matches!(vp, LiteralValuePresenter::BooleanField(None)));
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::BooleanField(BooleanFieldValue::Nil)
+            ));
         }
 
         // test invalid value
@@ -332,544 +254,7 @@ mod tests {
                 "value": 123
             });
 
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::BooleanField, object);
-
-            assert!(matches!(
-                result,
-                Err(DecodeError::InvalidValue {
-                    field_type: _,
-                    value: _
-                })
-            ));
-        }
-    }
-
-    // test checkbox_field
-    #[test]
-    fn test_do_make_literal_checkbox_field_presenter() {
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "checkbox_field",
-                "value": {
-                    "options": ["option1", "option2"],
-                    "other": "other"
-                }
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::CheckboxField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::CheckboxField(Some(_))));
-        }
-
-        // test null value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "checkbox_field",
-                "value": null
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::CheckboxField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::CheckboxField(None)));
-        }
-
-        // value is not present
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "checkbox_field",
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::CheckboxField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::CheckboxField(None)));
-        }
-
-        // test invalid value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "checkbox_field",
-                "value": "invalid"
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::CheckboxField, object);
-
-            assert!(matches!(
-                result,
-                Err(DecodeError::InvalidValue {
-                    field_type: _,
-                    value: _
-                })
-            ));
-        }
-    }
-
-    // test single_line_field
-
-    // test date_time_field
-
-    #[test]
-    fn test_do_make_literal_date_time_field_presenter() {
-        let expected = datetime!(2022-04-29 07:34:10.420159);
-
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "date_time_field",
-                "value": "2022-04-29T07:34:10.420159"
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::DateTimeField, object).unwrap();
-
-            assert!(
-                matches!(vp, LiteralValuePresenter::DateTimeField(Some(NaiveDateTime(value))) if value == expected)
-            );
-        }
-
-        // null value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "date_time_field",
-                "value": null
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::DateTimeField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::DateTimeField(None)));
-        }
-
-        // value is not present, so we should get None
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "date_time_field"
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::DateTimeField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::DateTimeField(None)));
-        }
-
-        // invalid value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "date_time_field",
-                "value": 123
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::DateTimeField, object);
-
-            assert!(matches!(
-                result,
-                Err(DecodeError::InvalidValue {
-                    field_type: _,
-                    value: _
-                })
-            ));
-        }
-    }
-
-    // test numeric_field
-    #[test]
-    fn test_do_make_literal_number_field_presenter() {
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "numeric_field",
-                "value": 123
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::NumericField, object).unwrap();
-
-            assert!(
-                matches!(vp, LiteralValuePresenter::NumericField(Some(n)) if n == Number::from(123 as i64))
-            );
-        }
-
-        // float
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "numeric_field",
-                "value": 123.123
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::NumericField, object).unwrap();
-
-            assert!(
-                matches!(vp, LiteralValuePresenter::NumericField(Some(n)) if n == Number::from_f64(123.123).unwrap())
-            );
-        }
-
-        // null value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "numeric_field",
-                "value": null
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::NumericField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::NumericField(None)));
-        }
-
-        // value is not present, so we should get None
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "numeric_field",
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::NumericField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::NumericField(None)));
-        }
-
-        // invalid value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "numeric_field",
-                "value": "123"
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::NumericField, object);
-
-            assert!(matches!(
-                result,
-                Err(DecodeError::InvalidValue {
-                    field_type: _,
-                    value: _
-                })
-            ));
-        }
-    }
-
-    // test radio_button_field
-    #[test]
-    fn test_do_make_literal_radio_button_field_presenter() {
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "radio_button_field",
-                "value": {
-                    "options": ["option"],
-                    "other": null
-                }
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::RadioButtonField, object).unwrap();
-
-            assert!(matches!(
-                vp,
-                LiteralValuePresenter::RadioButtonField(Some(OptionsValue {
-                    options,
-                    other: None
-                })) if options.len() == 1
-            ));
-        }
-
-        // test null value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "radio_button_field",
-                "value": null
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::RadioButtonField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::RadioButtonField(None)));
-        }
-
-        // value is not present
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "radio_button_field",
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::RadioButtonField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::RadioButtonField(None)));
-        }
-
-        // test invalid options count
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "radio_button_field",
-                "value": {
-                    "options": ["option1", "option2"],
-                    "other": null
-                }
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::RadioButtonField, object);
-
-            assert!(matches!(
-                result,
-                Err(DecodeError::InvalidValue {
-                    field_type: _,
-                    value: _
-                })
-            ));
-        }
-
-        // test invalid value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "radio_button_field",
-                "value": "invalid"
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::RadioButtonField, object);
-
-            assert!(matches!(
-                result,
-                Err(DecodeError::InvalidValue {
-                    field_type: _,
-                    value: _
-                })
-            ));
-        }
-    }
-
-    #[test]
-    fn test_do_make_literal_single_line_field_presenter() {
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "single_line_field",
-                "value": "value"
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
-
-            assert!(matches!(
-                vp,
-                LiteralValuePresenter::SingleLineField(Some(_))
-            ));
-        }
-
-        // test null value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "single_line_field",
-                "value": null
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
-        }
-
-        // value is not present, so we should get None
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "single_line_field"
-            });
-
-            let object = json.as_object().unwrap();
-            let vp = do_make_literal_presenter(&FieldType::SingleLineField, object).unwrap();
-
-            assert!(matches!(vp, LiteralValuePresenter::SingleLineField(None)));
-        }
-
-        // test invalid value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "single_line_field",
-                "value": 123
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::SingleLineField, object);
-
-            assert!(matches!(
-                result,
-                Err(DecodeError::InvalidValue {
-                    field_type: _,
-                    value: _
-                })
-            ));
-        }
-    }
-
-    // test table_row_field
-    #[test]
-    fn test_do_make_literal_table_row_field_presenter() {
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "table_row_field",
-                "value": "67e55044-10b1-426f-9247-bb680e5fe0c8"
-            });
-
-            let expected_uuid = uuid!("67e55044-10b1-426f-9247-bb680e5fe0c8");
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::TableRowField, object);
-
-            assert!(matches!(
-                result,
-                Ok(LiteralValuePresenter::TableRowField(Some(UuidV4(uuid)))) if uuid == expected_uuid
-            ));
-        }
-
-        // null value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "table_row_field",
-                "value": null
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::TableRowField, object);
-
-            assert!(matches!(
-                result,
-                Ok(LiteralValuePresenter::TableRowField(None))
-            ));
-        }
-
-        // value is not present
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "table_row_field"
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::TableRowField, object);
-
-            assert!(matches!(
-                result,
-                Ok(LiteralValuePresenter::TableRowField(None))
-            ));
-        }
-
-        // invalid value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "table_row_field",
-                "value": "invalid"
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::TableRowField, object);
-
-            assert!(matches!(
-                result,
-                Err(DecodeError::InvalidValue {
-                    field_type: _,
-                    value: _
-                })
-            ));
-        }
-    }
-
-    // test user_boundary_field
-    #[test]
-    fn test_do_make_literal_user_boundary_field_presenter() {
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "user_boundary_field",
-                "value": {
-                    "user_uuids": ["67e55044-10b1-426f-9247-bb680e5fe0c8"]
-                }
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::UserBoundaryField, object);
-
-            assert!(matches!(
-                result,
-                Ok(LiteralValuePresenter::UserBoundaryField(Some(UserBoundary {
-                    user_uuids,
-                    simple_department_uuids: _,
-                    penetrating_department_uuids: _
-                }))) if user_uuids.len() == 1
-            ));
-        }
-
-        // null value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "user_boundary_field",
-                "value": null
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::UserBoundaryField, object);
-
-            assert!(matches!(
-                result,
-                Ok(LiteralValuePresenter::UserBoundaryField(None))
-            ));
-        }
-
-        // value is not present
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "user_boundary_field"
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::UserBoundaryField, object);
-
-            assert!(matches!(
-                result,
-                Ok(LiteralValuePresenter::UserBoundaryField(None))
-            ));
-        }
-
-        // invalid value
-        {
-            let json = json!({
-                "type": "literal",
-                "field_type": "user_boundary_field",
-                "value": "invalid"
-            });
-
-            let object = json.as_object().unwrap();
-            let result = do_make_literal_presenter(&FieldType::UserBoundaryField, object);
+            let result = LiteralValuePresenter::from_json(&json);
 
             assert!(matches!(
                 result,
@@ -884,7 +269,7 @@ mod tests {
     #[test]
     fn test_literal_boolean_field_value_presenter_to_json() {
         {
-            let vp = LiteralValuePresenter::BooleanField(Some(true));
+            let vp = LiteralValuePresenter::BooleanField(BooleanFieldValue::Value(true));
             let str = vp.to_json().to_string();
             let expected = json!({"type": "literal", "field_type": "BOOLEAN_FIELD", "value": true});
 
@@ -893,7 +278,7 @@ mod tests {
 
         // null value
         {
-            let vp = LiteralValuePresenter::BooleanField(None);
+            let vp = LiteralValuePresenter::BooleanField(BooleanFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected = json!({"type": "literal", "field_type": "BOOLEAN_FIELD", "value": null});
 
@@ -901,13 +286,86 @@ mod tests {
         }
     }
 
+    // test checkbox_field
+    #[test]
+    fn test_make_literal_checkbox_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "checkbox_field",
+                "value": {
+                    "options": ["option1", "option2"],
+                    "other": "other"
+                }
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::CheckboxField(CheckboxFieldValue::Value(_))
+            ));
+        }
+
+        // test null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "checkbox_field",
+                "value": null
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::CheckboxField(CheckboxFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "checkbox_field",
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::CheckboxField(CheckboxFieldValue::Nil)
+            ));
+        }
+
+        // test invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "checkbox_field",
+                "value": "invalid"
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
     #[test]
     fn test_literal_checkbox_field_value_presenter_to_json() {
         {
-            let vp = LiteralValuePresenter::CheckboxField(Some(OptionsValue {
-                options: vec![String::from("option1"), String::from("option2")],
-                other: Some(String::from("other")),
-            }));
+            let vp =
+                LiteralValuePresenter::CheckboxField(CheckboxFieldValue::Value(OptionsValue {
+                    options: vec!["option1".to_string(), "option2".to_string()],
+                    other: Some(String::from("other")),
+                }));
             let str = vp.to_json().to_string();
             let expected = json!({
                 "type": "literal",
@@ -920,10 +378,11 @@ mod tests {
 
         // empty options and other
         {
-            let vp = LiteralValuePresenter::CheckboxField(Some(OptionsValue {
-                options: vec![],
-                other: None,
-            }));
+            let vp =
+                LiteralValuePresenter::CheckboxField(CheckboxFieldValue::Value(OptionsValue {
+                    options: vec![],
+                    other: None,
+                }));
             let str = vp.to_json().to_string();
             let expected = json!({
                 "type": "literal",
@@ -933,14 +392,115 @@ mod tests {
 
             assert!(str == expected.to_string());
         }
+
+        // null value
+        {
+            let vp = LiteralValuePresenter::CheckboxField(CheckboxFieldValue::Nil);
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "CHECKBOX_FIELD",
+                "value": null
+            });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test date_time_field
+
+    #[test]
+    fn test_make_literal_date_time_field_presenter() {
+        let expected = NaiveDateTime {
+            year: 2022,
+            month: 4,
+            day: 29,
+            hour: 7,
+            minute: 34,
+            second: 10,
+            nanosecond: 420159000,
+        };
+
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_field",
+                "value": "2022-04-29T07:34:10.420159"
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::DateTimeField(DateTimeFieldValue::Value(value))
+                if value == expected
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_field",
+                "value": null
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::DateTimeField(DateTimeFieldValue::Nil)
+            ));
+        }
+
+        // value is not present, so we should get None
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_field"
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::DateTimeField(DateTimeFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_field",
+                "value": 123
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
     }
 
     #[test]
     fn test_literal_date_time_field_value_presenter_to_json() {
         {
-            let vp = LiteralValuePresenter::DateTimeField(Some(
-                NaiveDateTime::parse_str("2020-01-01T00:00:00Z").unwrap(),
-            ));
+            let vp =
+                LiteralValuePresenter::DateTimeField(DateTimeFieldValue::Value(NaiveDateTime {
+                    year: 2020,
+                    month: 1,
+                    day: 1,
+                    hour: 0,
+                    minute: 0,
+                    second: 0,
+                    nanosecond: 0,
+                }));
             let str = vp.to_json().to_string();
             let expected = json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00"});
 
@@ -949,9 +509,16 @@ mod tests {
 
         // with ms
         {
-            let vp = LiteralValuePresenter::DateTimeField(Some(
-                NaiveDateTime::parse_str("2020-01-01T00:00:00.123456Z").unwrap(),
-            ));
+            let vp =
+                LiteralValuePresenter::DateTimeField(DateTimeFieldValue::Value(NaiveDateTime {
+                    year: 2020,
+                    month: 1,
+                    day: 1,
+                    hour: 0,
+                    minute: 0,
+                    second: 0,
+                    nanosecond: 123456000,
+                }));
             let str = vp.to_json().to_string();
             let expected = json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00.123456"});
 
@@ -959,7 +526,7 @@ mod tests {
         }
 
         {
-            let vp = LiteralValuePresenter::DateTimeField(None);
+            let vp = LiteralValuePresenter::DateTimeField(DateTimeFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected =
                 json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": null});
@@ -968,10 +535,98 @@ mod tests {
         }
     }
 
+    // test numeric_field
+    #[test]
+    fn test_make_literal_number_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+                "value": 123 as i64
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::NumericField(NumericFieldValue::Value(Number::Integer(123)))
+            ));
+        }
+
+        // float
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+                "value": 123.123 as f64
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            let expected = Number::Float(123.123);
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::NumericField(NumericFieldValue::Value(value)) if value == expected
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+                "value": null
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::NumericField(NumericFieldValue::Nil)
+            ));
+        }
+
+        // value is not present, so we should get None
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::NumericField(NumericFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_field",
+                "value": "123"
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
     #[test]
     fn test_literal_numeric_field_value_presenter_to_json() {
         {
-            let vp = LiteralValuePresenter::NumericField(Some(Number::from(123)));
+            let vp =
+                LiteralValuePresenter::NumericField(NumericFieldValue::Value(Number::Integer(123)));
             let str = vp.to_json().to_string();
 
             let expected: Value = serde_json::from_str(
@@ -989,7 +644,8 @@ mod tests {
 
         // float
         {
-            let vp = LiteralValuePresenter::NumericField(Number::from_f64(123.1 as f64));
+            let vp =
+                LiteralValuePresenter::NumericField(NumericFieldValue::Value(Number::Float(123.1)));
             let str = vp.to_json().to_string();
             let expected: Value = serde_json::from_str(
                 r#"
@@ -1006,7 +662,7 @@ mod tests {
 
         // null
         {
-            let vp = LiteralValuePresenter::NumericField(None);
+            let vp = LiteralValuePresenter::NumericField(NumericFieldValue::Nil);
             let str = vp.to_json().to_string();
 
             let expected: Value = serde_json::from_str(
@@ -1023,13 +679,112 @@ mod tests {
         }
     }
 
+    // test radio_button_field
+    #[test]
+    fn test_make_literal_radio_button_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+                "value": {
+                    "options": ["option"],
+                    "other": null
+                }
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::RadioButtonField(RadioButtonFieldValue::Value(OptionsValue {
+                    options,
+                    other: None
+                })) if options.len() == 1
+            ));
+        }
+
+        // test null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+                "value": null
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::RadioButtonField(RadioButtonFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::RadioButtonField(RadioButtonFieldValue::Nil)
+            ));
+        }
+
+        // test invalid options count
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+                "value": {
+                    "options": ["option1", "option2"],
+                    "other": null
+                }
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+
+        // test invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "radio_button_field",
+                "value": "invalid"
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
     #[test]
     fn test_literal_radio_button_field_value_presenter_to_json() {
         {
-            let vp = LiteralValuePresenter::RadioButtonField(Some(OptionsValue {
-                options: vec![String::from("option")],
-                other: None,
-            }));
+            let vp = LiteralValuePresenter::RadioButtonField(RadioButtonFieldValue::Value(
+                OptionsValue {
+                    options: vec!["option".to_string()],
+                    other: None,
+                },
+            ));
             let str = vp.to_json().to_string();
             let expected = json!({
                 "type": "literal",
@@ -1042,10 +797,12 @@ mod tests {
 
         // with other
         {
-            let vp = LiteralValuePresenter::RadioButtonField(Some(OptionsValue {
-                options: vec![],
-                other: Some(String::from("other")),
-            }));
+            let vp = LiteralValuePresenter::RadioButtonField(RadioButtonFieldValue::Value(
+                OptionsValue {
+                    options: vec![],
+                    other: Some("other".to_string()),
+                },
+            ));
             let str = vp.to_json().to_string();
             let expected = json!({
                 "type": "literal",
@@ -1058,10 +815,12 @@ mod tests {
 
         // empty options and other
         {
-            let vp = LiteralValuePresenter::RadioButtonField(Some(OptionsValue {
-                options: vec![],
-                other: None,
-            }));
+            let vp = LiteralValuePresenter::RadioButtonField(RadioButtonFieldValue::Value(
+                OptionsValue {
+                    options: vec![],
+                    other: None,
+                },
+            ));
             let str = vp.to_json().to_string();
             let expected = json!({
                 "type": "literal",
@@ -1071,12 +830,98 @@ mod tests {
 
             assert!(str == expected.to_string());
         }
+
+        // null value
+        {
+            let vp = LiteralValuePresenter::RadioButtonField(RadioButtonFieldValue::Nil);
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "RADIO_BUTTON_FIELD",
+                "value": null
+            });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test single_select_field
+
+    #[test]
+    fn test_make_literal_single_line_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_field",
+                "value": "value"
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::SingleLineField(SingleLineFieldValue::Value(value))
+                if value == "value"
+            ));
+        }
+
+        // test null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_field",
+                "value": null
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::SingleLineField(SingleLineFieldValue::Nil)
+            ));
+        }
+
+        // value is not present, so we should get None
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_field"
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::SingleLineField(SingleLineFieldValue::Nil)
+            ));
+        }
+
+        // test invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_field",
+                "value": 123
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
     }
 
     #[test]
     fn test_literal_single_line_field_value_presenter_to_json() {
         {
-            let vp = LiteralValuePresenter::SingleLineField(Some(String::from("hello")));
+            let vp = LiteralValuePresenter::SingleLineField(SingleLineFieldValue::Value(
+                "hello".to_string(),
+            ));
             let str = vp.to_json().to_string();
             let expected =
                 json!({"type": "literal", "field_type": "SINGLE_LINE_FIELD", "value": "hello"});
@@ -1086,7 +931,7 @@ mod tests {
 
         // null value
         {
-            let vp = LiteralValuePresenter::SingleLineField(None);
+            let vp = LiteralValuePresenter::SingleLineField(SingleLineFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected =
                 json!({"type": "literal", "field_type": "SINGLE_LINE_FIELD", "value": null});
@@ -1095,27 +940,96 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_literal_table_row_field_value_presenter_to_json() {
-        {
-            let uuid_str = "67e55044-10b1-426f-9247-bb680e5fe0c8";
-            let vp =
-                LiteralValuePresenter::TableRowField(Some(UuidV4::parse_str(uuid_str).unwrap()));
-            let str = vp.to_json().to_string();
-            let expected =
-                json!({"type": "literal", "field_type": "TABLE_ROW_FIELD", "value": uuid_str});
+    // test table_row_field
 
-            assert!(
-                str == expected.to_string(),
-                "str: {}, expected: {}",
-                str,
-                expected
-            );
+    #[test]
+    fn test_make_literal_table_row_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_field",
+                "value": "67e55044-10b1-426f-9247-bb680e5fe0c8"
+            });
+
+            let expected_uuid = Uuid("67e55044-10b1-426f-9247-bb680e5fe0c8".to_string());
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::TableRowField(TableRowFieldValue::Value(value))
+                if value == expected_uuid
+            ));
         }
 
         // null value
         {
-            let vp = LiteralValuePresenter::TableRowField(None);
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_field",
+                "value": null
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::TableRowField(TableRowFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_field"
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::TableRowField(TableRowFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_field",
+                "value": "invalid"
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_table_row_field_value_presenter_to_json() {
+        {
+            let uuid_str = "67e55044-10b1-426f-9247-bb680e5fe0c8";
+            let vp = LiteralValuePresenter::TableRowField(TableRowFieldValue::Value(Uuid(
+                uuid_str.to_string(),
+            )));
+            let str = vp.to_json().to_string();
+            let expected =
+                json!({"type": "literal", "field_type": "TABLE_ROW_FIELD", "value": uuid_str});
+
+            assert!(str == expected.to_string());
+        }
+
+        // null value
+        {
+            let vp = LiteralValuePresenter::TableRowField(TableRowFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected =
                 json!({"type": "literal", "field_type": "TABLE_ROW_FIELD", "value": null});
@@ -1124,21 +1038,98 @@ mod tests {
         }
     }
 
+    // test user_boundary_field
+    #[test]
+    fn test_make_literal_user_boundary_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "user_boundary_field",
+                "value": {
+                    "user_uuids": ["67e55044-10b1-426f-9247-bb680e5fe0c8"]
+                }
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::UserBoundaryField(UserBoundaryFieldValue::Value(UserBoundary {
+                    user_uuids,
+                    simple_department_uuids: _,
+                    penetrating_department_uuids: _
+                })) if user_uuids.len() == 1
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "user_boundary_field",
+                "value": null
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::UserBoundaryField(UserBoundaryFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "user_boundary_field"
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::UserBoundaryField(UserBoundaryFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "user_boundary_field",
+                "value": "invalid"
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
     #[test]
     fn test_literal_user_boundary_value_presenter_to_json() {
         {
-            let vp = LiteralValuePresenter::UserBoundaryField(Some(UserBoundary {
-                user_uuids: vec![UuidV4::parse_str("00000000-0000-0000-0000-ffff00000000").unwrap()],
-                simple_department_uuids: vec![
-                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000001").unwrap(),
-                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000002").unwrap(),
-                ],
-                penetrating_department_uuids: vec![
-                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000003").unwrap(),
-                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000004").unwrap(),
-                    UuidV4::parse_str("00000000-0000-0000-0000-ffff00000005").unwrap(),
-                ],
-            }));
+            let vp = LiteralValuePresenter::UserBoundaryField(UserBoundaryFieldValue::Value(
+                UserBoundary {
+                    user_uuids: vec![Uuid("00000000-0000-0000-0000-ffff00000000".to_string())],
+                    simple_department_uuids: vec![
+                        Uuid("00000000-0000-0000-0000-ffff00000001".to_string()),
+                        Uuid("00000000-0000-0000-0000-ffff00000002".to_string()),
+                    ],
+                    penetrating_department_uuids: vec![
+                        Uuid("00000000-0000-0000-0000-ffff00000003".to_string()),
+                        Uuid("00000000-0000-0000-0000-ffff00000004".to_string()),
+                        Uuid("00000000-0000-0000-0000-ffff00000005".to_string()),
+                    ],
+                },
+            ));
             let str = vp.to_json().to_string();
             let expected = json!({
                 "type": "literal",
@@ -1164,7 +1155,7 @@ mod tests {
 
         // null value
         {
-            let vp = LiteralValuePresenter::UserBoundaryField(None);
+            let vp = LiteralValuePresenter::UserBoundaryField(UserBoundaryFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected = json!({
                 "type": "literal",

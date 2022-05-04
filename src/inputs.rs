@@ -16,8 +16,8 @@ pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>,
             let mut result: Vec<ValuePresenter> = Vec::new();
 
             for (field_type, value) in pairs {
-                match value {
-                    Value::Object(obj) => match ValuePresenter::from_json(obj) {
+                if value.is_object() {
+                    match ValuePresenter::from_json(value) {
                         Ok(vp) => {
                             if vp.get_field_type() == field_type {
                                 result.push(vp);
@@ -29,8 +29,9 @@ pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>,
                             }
                         }
                         Err(error) => return Err(error),
-                    },
-                    value => return Err(DecodeError::InvalidJsonObject(value)),
+                    }
+                } else {
+                    return Err(DecodeError::InvalidJsonObject(value));
                 }
             }
 
@@ -42,7 +43,7 @@ pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>,
 
 #[cfg(test)]
 mod tests {
-    use crate::value_presenter::literal::LiteralValuePresenter;
+    use crate::value_presenter::{field_value::BooleanFieldValue, literal::LiteralValuePresenter};
 
     use super::*;
     use serde_json::json;
@@ -57,15 +58,12 @@ mod tests {
             }
         ]);
 
-        let result = parse(&args, vec![FieldType::BooleanField]);
-
-        assert!(result.is_ok());
-        assert!(result.as_ref().unwrap().len() == 1);
+        let vps = parse(&args, vec![FieldType::BooleanField]).unwrap();
 
         assert!(matches!(
-            result.unwrap().as_slice(),
+            vps.as_slice(),
             [ValuePresenter::Literal(
-                LiteralValuePresenter::BooleanField(Some(true))
+                LiteralValuePresenter::BooleanField(BooleanFieldValue::Value(true))
             )]
         ));
     }
@@ -85,15 +83,12 @@ mod tests {
             }
         ]);
 
-        let result = parse(&args, vec![FieldType::BooleanField]);
-
-        assert!(result.is_ok());
-        assert!(result.as_ref().unwrap().len() == 1);
+        let vps = parse(&args, vec![FieldType::BooleanField]).unwrap();
 
         assert!(matches!(
-            result.unwrap().as_slice(),
+            vps.as_slice(),
             [ValuePresenter::Literal(
-                LiteralValuePresenter::BooleanField(Some(true))
+                LiteralValuePresenter::BooleanField(BooleanFieldValue::Value(true))
             )]
         ));
     }

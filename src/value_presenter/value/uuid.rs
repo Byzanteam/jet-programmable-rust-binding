@@ -3,7 +3,7 @@ use uuid::Uuid as UuidLib;
 
 use super::json_codec::JsonCodec;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Uuid(pub String);
 
 #[derive(Debug)]

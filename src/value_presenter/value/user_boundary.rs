@@ -10,7 +10,7 @@ pub enum ParseUserBoundaryError {
     InvalidPenetratingDepartmentUuids,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UserBoundary {
     pub user_uuids: Vec<Uuid>,
     pub simple_department_uuids: Vec<Uuid>,
