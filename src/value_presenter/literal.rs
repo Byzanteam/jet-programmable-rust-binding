@@ -76,6 +76,62 @@ impl LiteralValuePresenter {
             "value": value,
         })
     }
+
+    pub fn as_boolean_field_value(&self) -> Option<&BooleanFieldValue> {
+        match self {
+            LiteralValuePresenter::BooleanField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_checkbox_field_value(&self) -> Option<&CheckboxFieldValue> {
+        match self {
+            LiteralValuePresenter::CheckboxField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_date_time_field_value(&self) -> Option<&DateTimeFieldValue> {
+        match self {
+            LiteralValuePresenter::DateTimeField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_numeric_field_value(&self) -> Option<&NumericFieldValue> {
+        match self {
+            LiteralValuePresenter::NumericField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_radio_button_field_value(&self) -> Option<&RadioButtonFieldValue> {
+        match self {
+            LiteralValuePresenter::RadioButtonField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_single_line_field_value(&self) -> Option<&SingleLineFieldValue> {
+        match self {
+            LiteralValuePresenter::SingleLineField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_table_row_field_value(&self) -> Option<&TableRowFieldValue> {
+        match self {
+            LiteralValuePresenter::TableRowField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_user_boundary_field_value(&self) -> Option<&UserBoundaryFieldValue> {
+        match self {
+            LiteralValuePresenter::UserBoundaryField(value) => Some(value),
+            _ => None,
+        }
+    }
 }
 
 fn make_literal_field_value(
