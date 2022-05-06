@@ -4,7 +4,7 @@ This repository contains the codec and host functions for the programmable wasm 
 
 ## Example
 ```rust
-#![no_main]
+#![cfg_attr(not(test), no_main)]
 
 use jet_programmable_rust_binding::{
     outputs::Outputs, program, value_presenter::field_type::FieldType,
@@ -16,4 +16,10 @@ fn entrypoint(inputs: Vec<ValuePresenter>) -> Outputs {
 }
 
 program!(entrypoint, vec![FieldType::SingleLineField]);
+
+#[cfg(test)]
+mod tests {
+    // test code goes here
+    // ...snpi
+}
 ```
