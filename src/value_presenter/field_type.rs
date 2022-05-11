@@ -15,8 +15,12 @@ pub enum FieldType {
 
     // list field
     BooleanListField,
+    CascaderListField,
     DateTimeListField,
+    FileListField,
+    MultipleLineListField,
     NumericListField,
+    RelationListField,
     SingleLineListField,
     TableRowListField,
 }
@@ -51,11 +55,21 @@ impl FieldType {
             "BooleanListField" | "BOOLEAN_LIST_FIELD" | "boolean_list_field" => {
                 Ok(FieldType::BooleanListField)
             }
+            "CascaderListField" | "CASCADER_LIST_FIELD" | "cascader_list_field" => {
+                Ok(FieldType::CascaderListField)
+            }
             "DateTimeListField" | "DATE_TIME_LIST_FIELD" | "date_time_list_field" => {
                 Ok(FieldType::DateTimeListField)
             }
+            "FileListField" | "FILE_LIST_FIELD" | "file_list_field" => Ok(FieldType::FileListField),
+            "MultipleLineListField" | "MULTIPLE_LINE_LIST_FIELD" | "multiple_line_list_field" => {
+                Ok(FieldType::MultipleLineListField)
+            }
             "NumericListField" | "NUMERIC_LIST_FIELD" | "numeric_list_field" => {
                 Ok(FieldType::NumericListField)
+            }
+            "RelationListField" | "RELATION_LIST_FIELD" | "relation_list_field" => {
+                Ok(FieldType::RelationListField)
             }
             "SingleLineListField" | "SINGLE_LINE_LIST_FIELD" | "single_line_list_field" => {
                 Ok(FieldType::SingleLineListField)
@@ -84,8 +98,12 @@ impl FieldType {
 
             // list field
             FieldType::BooleanListField => From::from("BOOLEAN_LIST_FIELD"),
+            FieldType::CascaderListField => From::from("CASCADER_LIST_FIELD"),
             FieldType::DateTimeListField => From::from("DATE_TIME_LIST_FIELD"),
+            FieldType::FileListField => From::from("FILE_LIST_FIELD"),
+            FieldType::MultipleLineListField => From::from("MULTIPLE_LINE_LIST_FIELD"),
             FieldType::NumericListField => From::from("NUMERIC_LIST_FIELD"),
+            FieldType::RelationListField => From::from("RELATION_LIST_FIELD"),
             FieldType::SingleLineListField => From::from("SINGLE_LINE_LIST_FIELD"),
             FieldType::TableRowListField => From::from("TABLE_ROW_LIST_FIELD"),
         }

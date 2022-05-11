@@ -3,7 +3,8 @@ use serde_json::Value;
 use super::{
     field_type::FieldType,
     literal_naive_value::{
-        BooleanFieldValue, DateTimeFieldValue, NumericFieldValue, SingleLineFieldValue,
+        BooleanFieldValue, CascaderFieldValue, DateTimeFieldValue, FileFieldValue,
+        MultipleLineFieldValue, NumericFieldValue, RelationFieldValue, SingleLineFieldValue,
         TableRowFieldValue,
     },
     literal_value::{LiteralValue, ParseLiteralValueError},
@@ -16,14 +17,38 @@ pub enum BooleanListFieldValue {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum CascaderListFieldValue {
+    Value(Vec<CascaderFieldValue>),
+    Nil,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum DateTimeListFieldValue {
     Value(Vec<DateTimeFieldValue>),
     Nil,
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum FileListFieldValue {
+    Value(Vec<FileFieldValue>),
+    Nil,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum MultipleLineListFieldValue {
+    Value(Vec<MultipleLineFieldValue>),
+    Nil,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum NumericListFieldValue {
     Value(Vec<NumericFieldValue>),
+    Nil,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RelationListFieldValue {
+    Value(Vec<RelationFieldValue>),
     Nil,
 }
 
@@ -67,6 +92,34 @@ impl LiteralValue for BooleanListFieldValue {
     }
 }
 
+impl LiteralValue for CascaderListFieldValue {
+    fn is_nil(&self) -> bool {
+        matches!(self, CascaderListFieldValue::Nil)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
+        if value.is_null() {
+            return Ok(CascaderListFieldValue::Nil);
+        }
+
+        match list_from_json::<CascaderFieldValue>(value) {
+            Ok(values) => Ok(CascaderListFieldValue::Value(values)),
+            Err(_err) => Err(ParseLiteralValueError),
+        }
+    }
+
+    fn to_json(&self) -> Value {
+        match self {
+            CascaderListFieldValue::Value(values) => list_to_json(values),
+            CascaderListFieldValue::Nil => Value::Null,
+        }
+    }
+
+    fn get_field_type(&self) -> FieldType {
+        FieldType::CascaderListField
+    }
+}
+
 impl LiteralValue for DateTimeListFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, DateTimeListFieldValue::Nil)
@@ -95,6 +148,62 @@ impl LiteralValue for DateTimeListFieldValue {
     }
 }
 
+impl LiteralValue for FileListFieldValue {
+    fn is_nil(&self) -> bool {
+        matches!(self, FileListFieldValue::Nil)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
+        if value.is_null() {
+            return Ok(FileListFieldValue::Nil);
+        }
+
+        match list_from_json::<FileFieldValue>(value) {
+            Ok(values) => Ok(FileListFieldValue::Value(values)),
+            Err(_err) => Err(ParseLiteralValueError),
+        }
+    }
+
+    fn to_json(&self) -> Value {
+        match self {
+            FileListFieldValue::Value(values) => list_to_json(values),
+            FileListFieldValue::Nil => Value::Null,
+        }
+    }
+
+    fn get_field_type(&self) -> FieldType {
+        FieldType::FileListField
+    }
+}
+
+impl LiteralValue for MultipleLineListFieldValue {
+    fn is_nil(&self) -> bool {
+        matches!(self, MultipleLineListFieldValue::Nil)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
+        if value.is_null() {
+            return Ok(MultipleLineListFieldValue::Nil);
+        }
+
+        match list_from_json::<MultipleLineFieldValue>(value) {
+            Ok(values) => Ok(MultipleLineListFieldValue::Value(values)),
+            Err(_err) => Err(ParseLiteralValueError),
+        }
+    }
+
+    fn to_json(&self) -> Value {
+        match self {
+            MultipleLineListFieldValue::Value(values) => list_to_json(values),
+            MultipleLineListFieldValue::Nil => Value::Null,
+        }
+    }
+
+    fn get_field_type(&self) -> FieldType {
+        FieldType::MultipleLineListField
+    }
+}
+
 impl LiteralValue for NumericListFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, NumericListFieldValue::Nil)
@@ -120,6 +229,34 @@ impl LiteralValue for NumericListFieldValue {
 
     fn get_field_type(&self) -> FieldType {
         FieldType::NumericListField
+    }
+}
+
+impl LiteralValue for RelationListFieldValue {
+    fn is_nil(&self) -> bool {
+        matches!(self, RelationListFieldValue::Nil)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
+        if value.is_null() {
+            return Ok(RelationListFieldValue::Nil);
+        }
+
+        match list_from_json::<RelationFieldValue>(value) {
+            Ok(values) => Ok(RelationListFieldValue::Value(values)),
+            Err(_err) => Err(ParseLiteralValueError),
+        }
+    }
+
+    fn to_json(&self) -> Value {
+        match self {
+            RelationListFieldValue::Value(values) => list_to_json(values),
+            RelationListFieldValue::Nil => Value::Null,
+        }
+    }
+
+    fn get_field_type(&self) -> FieldType {
+        FieldType::RelationListField
     }
 }
 
@@ -211,7 +348,7 @@ mod tests {
     use serde_json::json;
 
     use crate::value_presenter::value::{
-        naive_date_time::NaiveDateTime, number::Number, uuid::Uuid,
+        cascader_value::CascaderValue, naive_date_time::NaiveDateTime, number::Number, uuid::Uuid,
     };
 
     use super::*;
@@ -246,6 +383,43 @@ mod tests {
             let result = result.unwrap();
 
             assert!(matches!(result, BooleanListFieldValue::Nil));
+        }
+    }
+
+    #[test]
+    fn test_cascader_list_field_value_from_json() {
+        {
+            let value = json!([
+                              {
+                                  "options_table_uuid": "00000000-0000-0000-0000-000000000000",
+                                  "row_uuid": "00000000-0000-0000-0000-000000000001"
+                              },
+                              null
+            ]);
+            let result = CascaderListFieldValue::from_json(&value);
+
+            assert!(result.is_ok());
+
+            assert!(matches!(
+                result.unwrap(),
+                CascaderListFieldValue::Value(values) if values.as_slice() == vec![
+                    CascaderFieldValue::Value(CascaderValue {
+                        options_table_uuid: Uuid("00000000-0000-0000-0000-000000000000".to_string()),
+                        row_uuid: Uuid("00000000-0000-0000-0000-000000000001".to_string()),
+                    }),
+                    CascaderFieldValue::Nil,
+                ]
+            ));
+        }
+
+        // null
+        {
+            let value = json!(null);
+            let result = CascaderListFieldValue::from_json(&value);
+
+            assert!(result.is_ok());
+
+            assert!(matches!(result.unwrap(), CascaderListFieldValue::Nil));
         }
     }
 
