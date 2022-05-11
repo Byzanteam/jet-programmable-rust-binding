@@ -1,4 +1,8 @@
-use super::{field_type::FieldType, value::json_codec::JsonCodec};
+use super::{
+    field_type::FieldType,
+    literal_value::{LiteralValue, ParseLiteralValueError},
+    value::json_codec::JsonCodec,
+};
 use serde_json::Value;
 
 use super::value::{
@@ -54,31 +58,19 @@ pub enum UserBoundaryFieldValue {
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct ParseLiteralFieldValueError;
-
-pub trait LiteralFieldValue {
-    fn is_nil(&self) -> bool;
-    fn from_json(value: &Value) -> Result<Self, ParseLiteralFieldValueError>
-    where
-        Self: Sized;
-    fn to_json(&self) -> Value;
-    fn get_field_type(&self) -> FieldType;
-}
-
-impl LiteralFieldValue for BooleanFieldValue {
+impl LiteralValue for BooleanFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, BooleanFieldValue::Nil)
     }
 
-    fn from_json(value: &Value) -> Result<Self, ParseLiteralFieldValueError> {
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
         if value.is_null() {
             return Ok(BooleanFieldValue::Nil);
         }
 
         match value.as_bool() {
             Some(v) => Ok(BooleanFieldValue::Value(v)),
-            None => Err(ParseLiteralFieldValueError),
+            None => Err(ParseLiteralValueError),
         }
     }
 
@@ -94,19 +86,19 @@ impl LiteralFieldValue for BooleanFieldValue {
     }
 }
 
-impl LiteralFieldValue for CheckboxFieldValue {
+impl LiteralValue for CheckboxFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, CheckboxFieldValue::Nil)
     }
 
-    fn from_json(value: &Value) -> Result<Self, ParseLiteralFieldValueError> {
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
         if value.is_null() {
             return Ok(CheckboxFieldValue::Nil);
         }
 
         match OptionsValue::from_json(value) {
             Ok(v) => Ok(CheckboxFieldValue::Value(v)),
-            Err(_) => Err(ParseLiteralFieldValueError),
+            Err(_) => Err(ParseLiteralValueError),
         }
     }
 
@@ -122,19 +114,19 @@ impl LiteralFieldValue for CheckboxFieldValue {
     }
 }
 
-impl LiteralFieldValue for DateTimeFieldValue {
+impl LiteralValue for DateTimeFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, DateTimeFieldValue::Nil)
     }
 
-    fn from_json(value: &Value) -> Result<Self, ParseLiteralFieldValueError> {
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
         if value.is_null() {
             return Ok(DateTimeFieldValue::Nil);
         }
 
         match NaiveDateTime::from_json(value) {
             Ok(v) => Ok(DateTimeFieldValue::Value(v)),
-            Err(_) => Err(ParseLiteralFieldValueError),
+            Err(_) => Err(ParseLiteralValueError),
         }
     }
 
@@ -150,19 +142,19 @@ impl LiteralFieldValue for DateTimeFieldValue {
     }
 }
 
-impl LiteralFieldValue for NumericFieldValue {
+impl LiteralValue for NumericFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, NumericFieldValue::Nil)
     }
 
-    fn from_json(value: &Value) -> Result<Self, ParseLiteralFieldValueError> {
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
         if value.is_null() {
             return Ok(NumericFieldValue::Nil);
         }
 
         match Number::from_json(value) {
             Ok(v) => Ok(NumericFieldValue::Value(v)),
-            Err(_) => Err(ParseLiteralFieldValueError),
+            Err(_) => Err(ParseLiteralValueError),
         }
     }
 
@@ -178,19 +170,19 @@ impl LiteralFieldValue for NumericFieldValue {
     }
 }
 
-impl LiteralFieldValue for RadioButtonFieldValue {
+impl LiteralValue for RadioButtonFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, RadioButtonFieldValue::Nil)
     }
 
-    fn from_json(value: &Value) -> Result<Self, ParseLiteralFieldValueError> {
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
         if value.is_null() {
             return Ok(RadioButtonFieldValue::Nil);
         }
 
         match OptionsValue::from_json(value) {
             Ok(v) => Ok(RadioButtonFieldValue::Value(v)),
-            Err(_) => Err(ParseLiteralFieldValueError),
+            Err(_) => Err(ParseLiteralValueError),
         }
     }
 
@@ -206,19 +198,19 @@ impl LiteralFieldValue for RadioButtonFieldValue {
     }
 }
 
-impl LiteralFieldValue for SingleLineFieldValue {
+impl LiteralValue for SingleLineFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, SingleLineFieldValue::Nil)
     }
 
-    fn from_json(value: &Value) -> Result<Self, ParseLiteralFieldValueError> {
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
         if value.is_null() {
             return Ok(SingleLineFieldValue::Nil);
         }
 
         match value.as_str() {
             Some(v) => Ok(SingleLineFieldValue::Value(v.to_string())),
-            None => Err(ParseLiteralFieldValueError),
+            None => Err(ParseLiteralValueError),
         }
     }
 
@@ -234,19 +226,19 @@ impl LiteralFieldValue for SingleLineFieldValue {
     }
 }
 
-impl LiteralFieldValue for TableRowFieldValue {
+impl LiteralValue for TableRowFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, TableRowFieldValue::Nil)
     }
 
-    fn from_json(value: &Value) -> Result<Self, ParseLiteralFieldValueError> {
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
         if value.is_null() {
             return Ok(TableRowFieldValue::Nil);
         }
 
         match Uuid::from_json(value) {
             Ok(v) => Ok(TableRowFieldValue::Value(v)),
-            Err(_) => Err(ParseLiteralFieldValueError),
+            Err(_) => Err(ParseLiteralValueError),
         }
     }
 
@@ -262,19 +254,19 @@ impl LiteralFieldValue for TableRowFieldValue {
     }
 }
 
-impl LiteralFieldValue for UserBoundaryFieldValue {
+impl LiteralValue for UserBoundaryFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, UserBoundaryFieldValue::Nil)
     }
 
-    fn from_json(value: &Value) -> Result<Self, ParseLiteralFieldValueError> {
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
         if value.is_null() {
             return Ok(UserBoundaryFieldValue::Nil);
         }
 
         match UserBoundary::from_json(value) {
             Ok(v) => Ok(UserBoundaryFieldValue::Value(v)),
-            Err(_) => Err(ParseLiteralFieldValueError),
+            Err(_) => Err(ParseLiteralValueError),
         }
     }
 

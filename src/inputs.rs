@@ -43,7 +43,10 @@ pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>,
 
 #[cfg(test)]
 mod tests {
-    use crate::value_presenter::{field_value::BooleanFieldValue, literal::LiteralValuePresenter};
+
+    use crate::value_presenter::{
+        literal_naive_value::BooleanFieldValue, literal_value_presenter::LiteralValuePresenter,
+    };
 
     use super::*;
     use serde_json::json;

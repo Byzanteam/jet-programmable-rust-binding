@@ -3,11 +3,15 @@ use serde_json::{json, Value};
 use super::{
     error::DecodeError,
     field_type::FieldType,
-    field_value::{
+    literal_list_value::{
+        BooleanListFieldValue, DateTimeListFieldValue, NumericListFieldValue,
+        SingleLineListFieldValue, TableRowListFieldValue,
+    },
+    literal_naive_value::{
         BooleanFieldValue, CheckboxFieldValue, DateTimeFieldValue, NumericFieldValue,
         RadioButtonFieldValue, SingleLineFieldValue, TableRowFieldValue, UserBoundaryFieldValue,
     },
-    field_value::{LiteralFieldValue, ParseLiteralFieldValueError},
+    literal_value::{LiteralValue, ParseLiteralValueError},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -20,6 +24,13 @@ pub enum LiteralValuePresenter {
     SingleLineField(SingleLineFieldValue),
     TableRowField(TableRowFieldValue),
     UserBoundaryField(UserBoundaryFieldValue),
+
+    // list field
+    BooleanListField(BooleanListFieldValue),
+    DateTimeListField(DateTimeListFieldValue),
+    NumericListField(NumericListFieldValue),
+    SingleLineListField(SingleLineListFieldValue),
+    TableRowListField(TableRowListFieldValue),
 }
 
 impl LiteralValuePresenter {
@@ -33,6 +44,13 @@ impl LiteralValuePresenter {
             LiteralValuePresenter::SingleLineField(value) => value.get_field_type(),
             LiteralValuePresenter::TableRowField(value) => value.get_field_type(),
             LiteralValuePresenter::UserBoundaryField(value) => value.get_field_type(),
+
+            // list field
+            LiteralValuePresenter::BooleanListField(value) => value.get_field_type(),
+            LiteralValuePresenter::DateTimeListField(value) => value.get_field_type(),
+            LiteralValuePresenter::NumericListField(value) => value.get_field_type(),
+            LiteralValuePresenter::SingleLineListField(value) => value.get_field_type(),
+            LiteralValuePresenter::TableRowListField(value) => value.get_field_type(),
         }
     }
 
@@ -68,6 +86,13 @@ impl LiteralValuePresenter {
             LiteralValuePresenter::SingleLineField(value) => value.to_json(),
             LiteralValuePresenter::TableRowField(value) => value.to_json(),
             LiteralValuePresenter::UserBoundaryField(value) => value.to_json(),
+
+            // list field
+            LiteralValuePresenter::BooleanListField(value) => value.to_json(),
+            LiteralValuePresenter::DateTimeListField(value) => value.to_json(),
+            LiteralValuePresenter::NumericListField(value) => value.to_json(),
+            LiteralValuePresenter::SingleLineListField(value) => value.to_json(),
+            LiteralValuePresenter::TableRowListField(value) => value.to_json(),
         };
 
         json!({
@@ -132,14 +157,49 @@ impl LiteralValuePresenter {
             _ => None,
         }
     }
+
+    pub fn as_boolean_list_field_value(&self) -> Option<&BooleanListFieldValue> {
+        match self {
+            LiteralValuePresenter::BooleanListField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_date_time_list_field_value(&self) -> Option<&DateTimeListFieldValue> {
+        match self {
+            LiteralValuePresenter::DateTimeListField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_numeric_list_field_value(&self) -> Option<&NumericListFieldValue> {
+        match self {
+            LiteralValuePresenter::NumericListField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_single_line_list_field_value(&self) -> Option<&SingleLineListFieldValue> {
+        match self {
+            LiteralValuePresenter::SingleLineListField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_table_row_list_field_value(&self) -> Option<&TableRowListFieldValue> {
+        match self {
+            LiteralValuePresenter::TableRowListField(value) => Some(value),
+            _ => None,
+        }
+    }
 }
 
 fn make_literal_field_value(
     field_type: &FieldType,
     value: &Value,
-) -> Result<LiteralValuePresenter, ParseLiteralFieldValueError> {
+) -> Result<LiteralValuePresenter, ParseLiteralValueError> {
     if !value.is_object() {
-        return Err(ParseLiteralFieldValueError);
+        return Err(ParseLiteralValueError);
     }
 
     match field_type {
@@ -179,7 +239,7 @@ fn make_literal_field_value(
                         if options_value.count_options() <= 1 {
                             Ok(field_value)
                         } else {
-                            Err(ParseLiteralFieldValueError)
+                            Err(ParseLiteralValueError)
                         }
                     }
                 })
@@ -209,6 +269,45 @@ fn make_literal_field_value(
                 .map(LiteralValuePresenter::UserBoundaryField),
             None => Ok(LiteralValuePresenter::UserBoundaryField(
                 UserBoundaryFieldValue::Nil,
+            )),
+        },
+
+        // list field
+        FieldType::BooleanListField => match value.get("value") {
+            Some(value) => {
+                BooleanListFieldValue::from_json(value).map(LiteralValuePresenter::BooleanListField)
+            }
+            None => Ok(LiteralValuePresenter::BooleanListField(
+                BooleanListFieldValue::Nil,
+            )),
+        },
+        FieldType::DateTimeListField => match value.get("value") {
+            Some(value) => DateTimeListFieldValue::from_json(value)
+                .map(LiteralValuePresenter::DateTimeListField),
+            None => Ok(LiteralValuePresenter::DateTimeListField(
+                DateTimeListFieldValue::Nil,
+            )),
+        },
+        FieldType::NumericListField => match value.get("value") {
+            Some(value) => {
+                NumericListFieldValue::from_json(value).map(LiteralValuePresenter::NumericListField)
+            }
+            None => Ok(LiteralValuePresenter::NumericListField(
+                NumericListFieldValue::Nil,
+            )),
+        },
+        FieldType::SingleLineListField => match value.get("value") {
+            Some(value) => SingleLineListFieldValue::from_json(value)
+                .map(LiteralValuePresenter::SingleLineListField),
+            None => Ok(LiteralValuePresenter::SingleLineListField(
+                SingleLineListFieldValue::Nil,
+            )),
+        },
+        FieldType::TableRowListField => match value.get("value") {
+            Some(value) => TableRowListFieldValue::from_json(value)
+                .map(LiteralValuePresenter::TableRowListField),
+            None => Ok(LiteralValuePresenter::TableRowListField(
+                TableRowListFieldValue::Nil,
             )),
         },
     }
@@ -1216,6 +1315,578 @@ mod tests {
             let expected = json!({
                 "type": "literal",
                 "field_type": "USER_BOUNDARY_FIELD",
+                "value": null
+            });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test boolean_list_field
+    #[test]
+    fn test_make_literal_boolean_list_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "boolean_list_field",
+                "value": [true, false, null]
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            let expected = vec![
+                BooleanFieldValue::Value(true),
+                BooleanFieldValue::Value(false),
+                BooleanFieldValue::Nil,
+            ];
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::BooleanListField(BooleanListFieldValue::Value(values)) if values.as_slice() ==  expected
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "boolean_list_field",
+                "value": null
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::BooleanListField(BooleanListFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "boolean_list_field",
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::BooleanListField(BooleanListFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "boolean_list_field",
+                "value": 123
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_boolean_list_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::BooleanListField(BooleanListFieldValue::Value(vec![
+                BooleanFieldValue::Value(true),
+                BooleanFieldValue::Value(false),
+                BooleanFieldValue::Nil,
+            ]));
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "BOOLEAN_LIST_FIELD",
+                "value": [true, false, null]
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        {
+            let vp = LiteralValuePresenter::BooleanListField(BooleanListFieldValue::Nil);
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "BOOLEAN_LIST_FIELD",
+                "value": null
+            });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test date_time_list_field
+    #[test]
+    fn test_make_literal_date_time_list_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_list_field",
+                "value": [
+                    "2020-01-01T00:00:00Z",
+                    null,
+                ]
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::DateTimeListField(DateTimeListFieldValue::Value(value)) if value.as_slice() == [
+                DateTimeFieldValue::Value(NaiveDateTime::new(2020, 1, 1, 0, 0, 0, 0)),
+                DateTimeFieldValue::Nil,
+                ]
+
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_list_field",
+                "value": null
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::DateTimeListField(DateTimeListFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_list_field",
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::DateTimeListField(DateTimeListFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "date_time_list_field",
+                "value": 123
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_date_time_list_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::DateTimeListField(DateTimeListFieldValue::Value(vec![
+                DateTimeFieldValue::Value(NaiveDateTime::new(2020, 1, 1, 0, 0, 0, 0)),
+                DateTimeFieldValue::Nil,
+            ]));
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "DATE_TIME_LIST_FIELD",
+                "value": [
+                    "2020-01-01T00:00:00",
+                    null,
+                ]
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        {
+            let vp = LiteralValuePresenter::DateTimeListField(DateTimeListFieldValue::Nil);
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "DATE_TIME_LIST_FIELD",
+                "value": null
+            });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test numeric_list_field
+    #[test]
+    fn test_make_literal_numeric_list_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_list_field",
+                "value": [
+                    1,
+                    1.2 as f64,
+                    null,
+                ]
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            let expected = vec![
+                NumericFieldValue::Value(Number::Integer(1)),
+                NumericFieldValue::Value(Number::Float(1.2)),
+                NumericFieldValue::Nil,
+            ];
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::NumericListField(NumericListFieldValue::Value(value)) if value.as_slice() == expected
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_list_field",
+                "value": null
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::NumericListField(NumericListFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_list_field",
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::NumericListField(NumericListFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "numeric_list_field",
+                "value": 123
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_numeric_list_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::NumericListField(NumericListFieldValue::Value(vec![
+                NumericFieldValue::Value(Number::Integer(1)),
+                NumericFieldValue::Value(Number::Float(1.2)),
+                NumericFieldValue::Nil,
+            ]));
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "NUMERIC_LIST_FIELD",
+                "value": [
+                    1,
+                    1.2,
+                    null,
+                ]
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        {
+            let vp = LiteralValuePresenter::NumericListField(NumericListFieldValue::Nil);
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "NUMERIC_LIST_FIELD",
+                "value": null
+            });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test single_line_list_field
+    #[test]
+    fn test_make_literal_single_line_list_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_list_field",
+                "value": [
+                    "foo",
+                    null
+                ]
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            let expected = vec![
+                SingleLineFieldValue::Value("foo".to_string()),
+                SingleLineFieldValue::Nil,
+            ];
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::SingleLineListField(SingleLineListFieldValue::Value(value)) if value.as_slice() == expected
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_list_field",
+                "value": null
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::SingleLineListField(SingleLineListFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_list_field",
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::SingleLineListField(SingleLineListFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "single_line_list_field",
+                "value": 123
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_single_line_list_field_value_presenter_to_json() {
+        {
+            let vp =
+                LiteralValuePresenter::SingleLineListField(SingleLineListFieldValue::Value(vec![
+                    SingleLineFieldValue::Value("foo".to_string()),
+                    SingleLineFieldValue::Nil,
+                ]));
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "SINGLE_LINE_LIST_FIELD",
+                "value": [
+                    "foo",
+                    null,
+                ]
+
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        {
+            let vp = LiteralValuePresenter::SingleLineListField(SingleLineListFieldValue::Nil);
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "SINGLE_LINE_LIST_FIELD",
+                "value": null
+            });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test table_row_list_field
+    #[test]
+    fn test_make_literal_table_row_list_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_list_field",
+                "value": [
+                    "00000000-0000-0000-0000-000000000000",
+                    null
+                ]
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            let expected = vec![
+                TableRowFieldValue::Value(Uuid("00000000-0000-0000-0000-000000000000".to_string())),
+                TableRowFieldValue::Nil,
+            ];
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::TableRowListField(TableRowListFieldValue::Value(value)) if value.as_slice() == expected
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_list_field",
+                "value": null
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::TableRowListField(TableRowListFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_list_field",
+            });
+
+            let result = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                result,
+                LiteralValuePresenter::TableRowListField(TableRowListFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "table_row_list_field",
+                "value": 123 as i64
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_table_row_list_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::TableRowListField(TableRowListFieldValue::Value(vec![
+                TableRowFieldValue::Value(Uuid("00000000-0000-0000-0000-000000000000".to_string())),
+                TableRowFieldValue::Nil,
+            ]));
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "TABLE_ROW_LIST_FIELD",
+                "value": [
+                    "00000000-0000-0000-0000-000000000000",
+                    null,
+
+                ]
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        {
+            let vp = LiteralValuePresenter::TableRowListField(TableRowListFieldValue::Nil);
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "TABLE_ROW_LIST_FIELD",
                 "value": null
             });
 
