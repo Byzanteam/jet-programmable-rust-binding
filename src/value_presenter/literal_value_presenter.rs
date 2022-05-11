@@ -8,8 +8,9 @@ use super::{
         SingleLineListFieldValue, TableRowListFieldValue,
     },
     literal_naive_value::{
-        BooleanFieldValue, CheckboxFieldValue, DateTimeFieldValue, NumericFieldValue,
-        RadioButtonFieldValue, SingleLineFieldValue, TableRowFieldValue, UserBoundaryFieldValue,
+        BooleanFieldValue, CascaderFieldValue, CheckboxFieldValue, DateTimeFieldValue,
+        FileFieldValue, MultipleLineFieldValue, NumericFieldValue, RadioButtonFieldValue,
+        RelationFieldValue, SingleLineFieldValue, TableRowFieldValue, UserBoundaryFieldValue,
     },
     literal_value::{LiteralValue, ParseLiteralValueError},
 };
@@ -17,10 +18,14 @@ use super::{
 #[derive(Debug, Clone, PartialEq)]
 pub enum LiteralValuePresenter {
     BooleanField(BooleanFieldValue),
+    CascaderField(CascaderFieldValue),
     CheckboxField(CheckboxFieldValue),
     DateTimeField(DateTimeFieldValue),
+    FileField(FileFieldValue),
+    MultipleLineField(MultipleLineFieldValue),
     NumericField(NumericFieldValue),
     RadioButtonField(RadioButtonFieldValue),
+    RelationField(RelationFieldValue),
     SingleLineField(SingleLineFieldValue),
     TableRowField(TableRowFieldValue),
     UserBoundaryField(UserBoundaryFieldValue),
@@ -37,10 +42,14 @@ impl LiteralValuePresenter {
     pub fn get_field_type(&self) -> FieldType {
         match self {
             LiteralValuePresenter::BooleanField(value) => value.get_field_type(),
+            LiteralValuePresenter::CascaderField(value) => value.get_field_type(),
             LiteralValuePresenter::CheckboxField(value) => value.get_field_type(),
             LiteralValuePresenter::DateTimeField(value) => value.get_field_type(),
+            LiteralValuePresenter::FileField(value) => value.get_field_type(),
+            LiteralValuePresenter::MultipleLineField(value) => value.get_field_type(),
             LiteralValuePresenter::NumericField(value) => value.get_field_type(),
             LiteralValuePresenter::RadioButtonField(value) => value.get_field_type(),
+            LiteralValuePresenter::RelationField(value) => value.get_field_type(),
             LiteralValuePresenter::SingleLineField(value) => value.get_field_type(),
             LiteralValuePresenter::TableRowField(value) => value.get_field_type(),
             LiteralValuePresenter::UserBoundaryField(value) => value.get_field_type(),
@@ -79,10 +88,14 @@ impl LiteralValuePresenter {
     pub fn to_json(&self) -> Value {
         let value = match self {
             LiteralValuePresenter::BooleanField(value) => value.to_json(),
+            LiteralValuePresenter::CascaderField(value) => value.to_json(),
             LiteralValuePresenter::CheckboxField(value) => value.to_json(),
             LiteralValuePresenter::DateTimeField(value) => value.to_json(),
+            LiteralValuePresenter::FileField(value) => value.to_json(),
+            LiteralValuePresenter::MultipleLineField(value) => value.to_json(),
             LiteralValuePresenter::NumericField(value) => value.to_json(),
             LiteralValuePresenter::RadioButtonField(value) => value.to_json(),
+            LiteralValuePresenter::RelationField(value) => value.to_json(),
             LiteralValuePresenter::SingleLineField(value) => value.to_json(),
             LiteralValuePresenter::TableRowField(value) => value.to_json(),
             LiteralValuePresenter::UserBoundaryField(value) => value.to_json(),
@@ -109,6 +122,13 @@ impl LiteralValuePresenter {
         }
     }
 
+    pub fn as_cascade_field_value(&self) -> Option<&CascaderFieldValue> {
+        match self {
+            LiteralValuePresenter::CascaderField(value) => Some(value),
+            _ => None,
+        }
+    }
+
     pub fn as_checkbox_field_value(&self) -> Option<&CheckboxFieldValue> {
         match self {
             LiteralValuePresenter::CheckboxField(value) => Some(value),
@@ -123,6 +143,20 @@ impl LiteralValuePresenter {
         }
     }
 
+    pub fn as_file_field_value(&self) -> Option<&FileFieldValue> {
+        match self {
+            LiteralValuePresenter::FileField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_multiple_line_field_value(&self) -> Option<&MultipleLineFieldValue> {
+        match self {
+            LiteralValuePresenter::MultipleLineField(value) => Some(value),
+            _ => None,
+        }
+    }
+
     pub fn as_numeric_field_value(&self) -> Option<&NumericFieldValue> {
         match self {
             LiteralValuePresenter::NumericField(value) => Some(value),
@@ -133,6 +167,13 @@ impl LiteralValuePresenter {
     pub fn as_radio_button_field_value(&self) -> Option<&RadioButtonFieldValue> {
         match self {
             LiteralValuePresenter::RadioButtonField(value) => Some(value),
+            _ => None,
+        }
+    }
+
+    pub fn as_relation_field_value(&self) -> Option<&RelationFieldValue> {
+        match self {
+            LiteralValuePresenter::RelationField(value) => Some(value),
             _ => None,
         }
     }
@@ -209,6 +250,14 @@ fn make_literal_field_value(
             }
             None => Ok(LiteralValuePresenter::BooleanField(BooleanFieldValue::Nil)),
         },
+        FieldType::CascaderField => match value.get("value") {
+            Some(value) => {
+                CascaderFieldValue::from_json(value).map(LiteralValuePresenter::CascaderField)
+            }
+            None => Ok(LiteralValuePresenter::CascaderField(
+                CascaderFieldValue::Nil,
+            )),
+        },
         FieldType::CheckboxField => match value.get("value") {
             Some(value) => {
                 CheckboxFieldValue::from_json(value).map(LiteralValuePresenter::CheckboxField)
@@ -223,6 +272,17 @@ fn make_literal_field_value(
             }
             None => Ok(LiteralValuePresenter::DateTimeField(
                 DateTimeFieldValue::Nil,
+            )),
+        },
+        FieldType::FileField => match value.get("value") {
+            Some(value) => FileFieldValue::from_json(value).map(LiteralValuePresenter::FileField),
+            None => Ok(LiteralValuePresenter::FileField(FileFieldValue::Nil)),
+        },
+        FieldType::MultipleLineField => match value.get("value") {
+            Some(value) => MultipleLineFieldValue::from_json(value)
+                .map(LiteralValuePresenter::MultipleLineField),
+            None => Ok(LiteralValuePresenter::MultipleLineField(
+                MultipleLineFieldValue::Nil,
             )),
         },
         FieldType::NumericField => match value.get("value") {
@@ -246,6 +306,14 @@ fn make_literal_field_value(
                 .map(LiteralValuePresenter::RadioButtonField),
             None => Ok(LiteralValuePresenter::RadioButtonField(
                 RadioButtonFieldValue::Nil,
+            )),
+        },
+        FieldType::RelationField => match value.get("value") {
+            Some(value) => {
+                RelationFieldValue::from_json(value).map(LiteralValuePresenter::RelationField)
+            }
+            None => Ok(LiteralValuePresenter::RelationField(
+                RelationFieldValue::Nil,
             )),
         },
         FieldType::SingleLineField => match value.get("value") {
@@ -316,8 +384,15 @@ fn make_literal_field_value(
 #[cfg(test)]
 mod tests {
     use crate::value_presenter::value::{
-        naive_date_time::NaiveDateTime, number::Number, options_value::OptionsValue,
-        user_boundary::UserBoundary, uuid::Uuid,
+        cascader_value::CascaderValue,
+        file_object::FileObject,
+        naive_date_time::NaiveDateTime,
+        number::Number,
+        options_value::OptionsValue,
+        prosemirror::ProsemirrorState,
+        relation_value::{RelationValue, ResourceType},
+        user_boundary::UserBoundary,
+        uuid::Uuid,
     };
 
     use super::*;
@@ -436,6 +511,100 @@ mod tests {
             let vp = LiteralValuePresenter::BooleanField(BooleanFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected = json!({"type": "literal", "field_type": "BOOLEAN_FIELD", "value": null});
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test cascader_field
+    #[test]
+    fn test_make_literal_cascader_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "cascader_field",
+                "value": {
+                    "options_table_uuid": "00000000-0000-0000-0000-000000000000",
+                    "row_uuid": "00000000-0000-0000-0000-000000000001",
+                }
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::CascaderField(CascaderFieldValue::Value(_))
+            ));
+        }
+
+        // test null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "cascader_field",
+                "value": null
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::CascaderField(CascaderFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "cascader_field",
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::CascaderField(CascaderFieldValue::Nil)
+            ));
+        }
+
+        // test invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "cascader_field",
+                "value": 123 as i64
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_cascader_field_value_presenter_to_json() {
+        {
+            let vp =
+                LiteralValuePresenter::CascaderField(CascaderFieldValue::Value(CascaderValue {
+                    options_table_uuid: Uuid("00000000-0000-0000-0000-000000000000".to_string()),
+                    row_uuid: Uuid("00000000-0000-0000-0000-000000000001".to_string()),
+                }));
+            let str = vp.to_json().to_string();
+            let expected = json!({
+                "type": "literal",
+                "field_type": "CASCADER_FIELD",
+                "value": {
+                    "options_table_uuid": "00000000-0000-0000-0000-000000000000",
+                    "row_uuid": "00000000-0000-0000-0000-000000000001",
+                }
+            });
 
             assert!(str == expected.to_string());
         }
@@ -685,6 +854,241 @@ mod tests {
             let str = vp.to_json().to_string();
             let expected =
                 json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": null});
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test file_field
+    #[test]
+    fn test_make_literal_file_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "file_field",
+                "value": {
+                    "object_uuid": "12345678-1234-1234-1234-1234567890ab",
+                    "filename": "file.txt",
+                    "filesize": 12345 as i64,
+                    "mimetype": "text/plain",
+                }
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::FileField(FileFieldValue::Value(_))
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "file_field",
+                "value": null
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::FileField(FileFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "file_field"
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::FileField(FileFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "file_field",
+                "value": 123
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_file_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::FileField(FileFieldValue::Value(FileObject {
+                object_uuid: Uuid("12345678-1234-1234-1234-1234567890ab".to_string()),
+                filename: "file.txt".to_string(),
+                filesize: 12345,
+                mimetype: "text/plain".to_string(),
+            }));
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "FILE_FIELD",
+                "value": {
+                    "object_uuid": "12345678-1234-1234-1234-1234567890ab",
+                    "filename": "file.txt",
+                    "filesize": 12345 as u64,
+                    "mimetype": "text/plain"
+                }
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        // null
+        {
+            let vp = LiteralValuePresenter::FileField(FileFieldValue::Nil);
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "FILE_FIELD",
+                "value": null
+            });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test multiple_line_field
+    #[test]
+    fn test_make_literal_multiple_line_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "multiple_line_field",
+                "value": {
+                    "doc": {
+                        "type": "text",
+                        "value": "Hello, world!"
+                    }
+                }
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::MultipleLineField(MultipleLineFieldValue::Value(_))
+            ));
+        }
+
+        // null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "multiple_line_field",
+                "value": null
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::MultipleLineField(MultipleLineFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "multiple_line_field"
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::MultipleLineField(MultipleLineFieldValue::Nil)
+            ));
+        }
+
+        // invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "multiple_line_field",
+                "value": 123
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_multiple_line_field_value_presenter_to_json() {
+        {
+            let vp = LiteralValuePresenter::MultipleLineField(MultipleLineFieldValue::Value(
+                ProsemirrorState {
+                    doc: json!( {
+                        "doc": {
+                            "type": "text",
+                            "value": "Hello, world!"
+                        }
+                    }),
+                },
+            ));
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "MULTIPLE_LINE_FIELD",
+                "value": {
+                    "doc": {
+                        "type": "text",
+                        "value": "Hello, world!"
+                    }
+                }
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        {
+            let vp = LiteralValuePresenter::MultipleLineField(MultipleLineFieldValue::Nil);
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "MULTIPLE_LINE_FIELD",
+                "value": null
+            });
 
             assert!(str == expected.to_string());
         }
@@ -993,6 +1397,117 @@ mod tests {
             let expected = json!({
                 "type": "literal",
                 "field_type": "RADIO_BUTTON_FIELD",
+                "value": null
+            });
+
+            assert!(str == expected.to_string());
+        }
+    }
+
+    // test relation_field
+    #[test]
+    fn test_make_literal_relation_field_presenter() {
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "relation_field",
+                "value": {
+                    "type": "database_row",
+                    "uuid": "00000000-0000-0000-0000-000000000000",
+                }
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::RelationField(RelationFieldValue::Value(_value))
+            ));
+        }
+
+        // test null value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "relation_field",
+                "value": null
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::RelationField(RelationFieldValue::Nil)
+            ));
+        }
+
+        // value is not present
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "relation_field",
+            });
+
+            let vp = LiteralValuePresenter::from_json(&json).unwrap();
+
+            assert!(matches!(
+                vp,
+                LiteralValuePresenter::RelationField(RelationFieldValue::Nil)
+            ));
+        }
+
+        // test invalid value
+        {
+            let json = json!({
+                "type": "literal",
+                "field_type": "relation_field",
+                "value": "invalid"
+            });
+
+            let result = LiteralValuePresenter::from_json(&json);
+
+            assert!(matches!(
+                result,
+                Err(DecodeError::InvalidValue {
+                    field_type: _,
+                    value: _
+                })
+            ));
+        }
+    }
+
+    #[test]
+    fn test_literal_relation_field_value_presenter_to_json() {
+        {
+            let vp =
+                LiteralValuePresenter::RelationField(RelationFieldValue::Value(RelationValue {
+                    resource_type: ResourceType::DatabaseRow,
+                    resource_uuid: Uuid("00000000-0000-0000-0000-000000000000".to_string()),
+                }));
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "RELATION_FIELD",
+                "value": {
+                    "type": "DATABASE_ROW",
+                    "uuid": "00000000-0000-0000-0000-000000000000",
+                }
+            });
+
+            assert!(str == expected.to_string());
+        }
+
+        // null
+        {
+            let vp = LiteralValuePresenter::RelationField(RelationFieldValue::Nil);
+
+            let str = vp.to_json().to_string();
+
+            let expected = json!({
+                "type": "literal",
+                "field_type": "RELATION_FIELD",
                 "value": null
             });
 

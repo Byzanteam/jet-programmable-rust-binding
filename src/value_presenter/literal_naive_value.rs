@@ -1,7 +1,10 @@
 use super::{
     field_type::FieldType,
     literal_value::{LiteralValue, ParseLiteralValueError},
-    value::json_codec::JsonCodec,
+    value::{
+        cascader_value::CascaderValue, file_object::FileObject, json_codec::JsonCodec,
+        prosemirror::ProsemirrorState, relation_value::RelationValue,
+    },
 };
 use serde_json::Value;
 
@@ -13,6 +16,12 @@ use super::value::{
 #[derive(Debug, Clone, PartialEq)]
 pub enum BooleanFieldValue {
     Value(bool),
+    Nil,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CascaderFieldValue {
+    Value(CascaderValue),
     Nil,
 }
 
@@ -29,6 +38,18 @@ pub enum DateTimeFieldValue {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum FileFieldValue {
+    Value(FileObject),
+    Nil,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum MultipleLineFieldValue {
+    Value(ProsemirrorState),
+    Nil,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum NumericFieldValue {
     Value(Number),
     Nil,
@@ -37,6 +58,12 @@ pub enum NumericFieldValue {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RadioButtonFieldValue {
     Value(OptionsValue),
+    Nil,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RelationFieldValue {
+    Value(RelationValue),
     Nil,
 }
 
@@ -114,6 +141,34 @@ impl LiteralValue for CheckboxFieldValue {
     }
 }
 
+impl LiteralValue for CascaderFieldValue {
+    fn is_nil(&self) -> bool {
+        matches!(self, CascaderFieldValue::Nil)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
+        if value.is_null() {
+            return Ok(CascaderFieldValue::Nil);
+        }
+
+        match CascaderValue::from_json(value) {
+            Ok(v) => Ok(CascaderFieldValue::Value(v)),
+            Err(_) => Err(ParseLiteralValueError),
+        }
+    }
+
+    fn to_json(&self) -> Value {
+        match self {
+            CascaderFieldValue::Value(value) => value.to_json(),
+            CascaderFieldValue::Nil => Value::Null,
+        }
+    }
+
+    fn get_field_type(&self) -> FieldType {
+        FieldType::CascaderField
+    }
+}
+
 impl LiteralValue for DateTimeFieldValue {
     fn is_nil(&self) -> bool {
         matches!(self, DateTimeFieldValue::Nil)
@@ -139,6 +194,62 @@ impl LiteralValue for DateTimeFieldValue {
 
     fn get_field_type(&self) -> FieldType {
         FieldType::DateTimeField
+    }
+}
+
+impl LiteralValue for FileFieldValue {
+    fn is_nil(&self) -> bool {
+        matches!(self, FileFieldValue::Nil)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
+        if value.is_null() {
+            return Ok(FileFieldValue::Nil);
+        }
+
+        match FileObject::from_json(value) {
+            Ok(v) => Ok(FileFieldValue::Value(v)),
+            Err(_) => Err(ParseLiteralValueError),
+        }
+    }
+
+    fn to_json(&self) -> Value {
+        match self {
+            FileFieldValue::Value(value) => value.to_json(),
+            FileFieldValue::Nil => Value::Null,
+        }
+    }
+
+    fn get_field_type(&self) -> FieldType {
+        FieldType::FileField
+    }
+}
+
+impl LiteralValue for MultipleLineFieldValue {
+    fn is_nil(&self) -> bool {
+        matches!(self, MultipleLineFieldValue::Nil)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
+        if value.is_null() {
+            return Ok(MultipleLineFieldValue::Nil);
+        }
+
+        match ProsemirrorState::from_json(value) {
+            Ok(v) => Ok(MultipleLineFieldValue::Value(v)),
+            Err(_) => Err(ParseLiteralValueError),
+        }
+    }
+
+    fn to_json(&self) -> Value {
+        match self {
+            MultipleLineFieldValue::Value(value) => value.to_json(),
+            MultipleLineFieldValue::Nil => Value::Null,
+        }
+    }
+
+    fn get_field_type(&self) -> FieldType {
+        FieldType::MultipleLineField
     }
 }
 
@@ -195,6 +306,34 @@ impl LiteralValue for RadioButtonFieldValue {
 
     fn get_field_type(&self) -> FieldType {
         FieldType::RadioButtonField
+    }
+}
+
+impl LiteralValue for RelationFieldValue {
+    fn is_nil(&self) -> bool {
+        matches!(self, RelationFieldValue::Nil)
+    }
+
+    fn from_json(value: &Value) -> Result<Self, ParseLiteralValueError> {
+        if value.is_null() {
+            return Ok(RelationFieldValue::Nil);
+        }
+
+        match RelationValue::from_json(value) {
+            Ok(v) => Ok(RelationFieldValue::Value(v)),
+            Err(_) => Err(ParseLiteralValueError),
+        }
+    }
+
+    fn to_json(&self) -> Value {
+        match self {
+            RelationFieldValue::Value(value) => value.to_json(),
+            RelationFieldValue::Nil => Value::Null,
+        }
+    }
+
+    fn get_field_type(&self) -> FieldType {
+        FieldType::RelationField
     }
 }
 

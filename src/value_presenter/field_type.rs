@@ -1,10 +1,14 @@
 #[derive(PartialEq, Debug)]
 pub enum FieldType {
     BooleanField,
+    CascaderField,
     CheckboxField,
     DateTimeField,
+    FileField,
+    MultipleLineField,
     NumericField,
     RadioButtonField,
+    RelationField,
     SingleLineField,
     TableRowField,
     UserBoundaryField,
@@ -23,12 +27,18 @@ impl FieldType {
     pub fn parse_str(s: &str) -> Result<Self, ParseFieldTypeError> {
         match s {
             "BooleanField" | "BOOLEAN_FIELD" | "boolean_field" => Ok(FieldType::BooleanField),
+            "CascaderField" | "CASCADER_FIELD" | "cascader_field" => Ok(FieldType::CascaderField),
             "CheckboxField" | "CHECKBOX_FIELD" | "checkbox_field" => Ok(FieldType::CheckboxField),
             "DateTimeField" | "DATE_TIME_FIELD" | "date_time_field" => Ok(FieldType::DateTimeField),
+            "FileField" | "FILE_FIELD" | "file_field" => Ok(FieldType::FileField),
+            "MultipleLineField" | "MULTIPLE_LINE_FIELD" | "multiple_line_field" => {
+                Ok(FieldType::MultipleLineField)
+            }
             "NumericField" | "NUMERIC_FIELD" | "numeric_field" => Ok(FieldType::NumericField),
             "RadioButtonField" | "RADIO_BUTTON_FIELD" | "radio_button_field" => {
                 Ok(FieldType::RadioButtonField)
             }
+            "RelationField" | "RELATION_FIELD" | "relation_field" => Ok(FieldType::RelationField),
             "SingleLineField" | "SINGLE_LINE_FIELD" | "single_line_field" => {
                 Ok(FieldType::SingleLineField)
             }
@@ -60,10 +70,14 @@ impl FieldType {
     pub fn to_str(&self) -> String {
         match self {
             FieldType::BooleanField => From::from("BOOLEAN_FIELD"),
+            FieldType::CascaderField => From::from("CASCADER_FIELD"),
             FieldType::CheckboxField => From::from("CHECKBOX_FIELD"),
             FieldType::DateTimeField => From::from("DATE_TIME_FIELD"),
+            FieldType::FileField => From::from("FILE_FIELD"),
+            FieldType::MultipleLineField => From::from("MULTIPLE_LINE_FIELD"),
             FieldType::NumericField => From::from("NUMERIC_FIELD"),
             FieldType::RadioButtonField => From::from("RADIO_BUTTON_FIELD"),
+            FieldType::RelationField => From::from("RELATION_FIELD"),
             FieldType::SingleLineField => From::from("SINGLE_LINE_FIELD"),
             FieldType::TableRowField => From::from("TABLE_ROW_FIELD"),
             FieldType::UserBoundaryField => From::from("USER_BOUNDARY_FIELD"),
