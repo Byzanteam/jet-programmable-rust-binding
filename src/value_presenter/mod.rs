@@ -55,6 +55,12 @@ impl ValuePresenter {
             ValuePresenter::Literal(vp) => vp.to_json(),
         }
     }
+
+    pub fn as_literal(&self) -> Option<&LiteralValuePresenter> {
+        match self {
+            ValuePresenter::Literal(vp) => Some(vp),
+        }
+    }
 }
 
 #[cfg(test)]
