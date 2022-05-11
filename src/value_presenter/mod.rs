@@ -69,7 +69,7 @@ mod tests {
     fn test_literal_value_presenter_from_json() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_field",
                 "value": true,
             });
@@ -85,7 +85,7 @@ mod tests {
 
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "BOOLEAN_FIELD",
                 "value": true,
             });
@@ -109,7 +109,7 @@ mod tests {
         assert!(
             vp.to_json()
                 == json!({
-                    "type": "literal",
+                    "type": "LITERAL",
                     "field_type": "BOOLEAN_FIELD",
                     "value": true,
                 })

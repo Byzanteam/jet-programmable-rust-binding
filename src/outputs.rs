@@ -35,12 +35,12 @@ mod tests {
 
         let expected = json!([
               {
-                  "type": "literal",
+                  "type": "LITERAL",
                   "field_type": "BOOLEAN_FIELD",
                   "value": true
               },
               {
-                  "type": "literal",
+                  "type": "LITERAL",
                   "field_type": "BOOLEAN_FIELD",
                   "value": null
               }

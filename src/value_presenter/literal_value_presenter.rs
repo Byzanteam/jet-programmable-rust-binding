@@ -109,7 +109,7 @@ impl LiteralValuePresenter {
         };
 
         json!({
-            "type": "literal",
+            "type": "LITERAL",
             "field_type": self.get_field_type().to_str(),
             "value": value,
         })
@@ -416,7 +416,7 @@ mod tests {
         // test true value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_field",
                 "value": true
             });
@@ -432,7 +432,7 @@ mod tests {
         // test false value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_field",
                 "value": false
             });
@@ -448,7 +448,7 @@ mod tests {
         // test null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_field",
                 "value": null
             });
@@ -464,7 +464,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_field",
             });
 
@@ -479,7 +479,7 @@ mod tests {
         // test invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_field",
                 "value": 123
             });
@@ -501,7 +501,7 @@ mod tests {
         {
             let vp = LiteralValuePresenter::BooleanField(BooleanFieldValue::Value(true));
             let str = vp.to_json().to_string();
-            let expected = json!({"type": "literal", "field_type": "BOOLEAN_FIELD", "value": true});
+            let expected = json!({"type": "LITERAL", "field_type": "BOOLEAN_FIELD", "value": true});
 
             assert!(str == expected.to_string());
         }
@@ -510,7 +510,7 @@ mod tests {
         {
             let vp = LiteralValuePresenter::BooleanField(BooleanFieldValue::Nil);
             let str = vp.to_json().to_string();
-            let expected = json!({"type": "literal", "field_type": "BOOLEAN_FIELD", "value": null});
+            let expected = json!({"type": "LITERAL", "field_type": "BOOLEAN_FIELD", "value": null});
 
             assert!(str == expected.to_string());
         }
@@ -521,7 +521,7 @@ mod tests {
     fn test_make_literal_cascader_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "cascader_field",
                 "value": {
                     "options_table_uuid": "00000000-0000-0000-0000-000000000000",
@@ -540,7 +540,7 @@ mod tests {
         // test null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "cascader_field",
                 "value": null
             });
@@ -556,7 +556,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "cascader_field",
             });
 
@@ -571,7 +571,7 @@ mod tests {
         // test invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "cascader_field",
                 "value": 123 as i64
             });
@@ -598,7 +598,7 @@ mod tests {
                 }));
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "CASCADER_FIELD",
                 "value": {
                     "options_table_uuid": "00000000-0000-0000-0000-000000000000",
@@ -615,7 +615,7 @@ mod tests {
     fn test_make_literal_checkbox_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "checkbox_field",
                 "value": {
                     "options": ["option1", "option2"],
@@ -634,7 +634,7 @@ mod tests {
         // test null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "checkbox_field",
                 "value": null
             });
@@ -650,7 +650,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "checkbox_field",
             });
 
@@ -665,7 +665,7 @@ mod tests {
         // test invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "checkbox_field",
                 "value": "invalid"
             });
@@ -692,7 +692,7 @@ mod tests {
                 }));
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "CHECKBOX_FIELD",
                 "value": {"options": ["option1", "option2"], "other": "other"}
             });
@@ -709,7 +709,7 @@ mod tests {
                 }));
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "CHECKBOX_FIELD",
                 "value": {"options": [], "other": null}
             });
@@ -722,7 +722,7 @@ mod tests {
             let vp = LiteralValuePresenter::CheckboxField(CheckboxFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "CHECKBOX_FIELD",
                 "value": null
             });
@@ -747,7 +747,7 @@ mod tests {
 
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "date_time_field",
                 "value": "2022-04-29T07:34:10.420159"
             });
@@ -764,7 +764,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "date_time_field",
                 "value": null
             });
@@ -780,7 +780,7 @@ mod tests {
         // value is not present, so we should get None
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "date_time_field"
             });
 
@@ -795,7 +795,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "date_time_field",
                 "value": 123
             });
@@ -826,7 +826,7 @@ mod tests {
                     nanosecond: 0,
                 }));
             let str = vp.to_json().to_string();
-            let expected = json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00"});
+            let expected = json!({"type": "LITERAL", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00"});
 
             assert!(str == expected.to_string());
         }
@@ -844,7 +844,7 @@ mod tests {
                     nanosecond: 123456000,
                 }));
             let str = vp.to_json().to_string();
-            let expected = json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00.123456"});
+            let expected = json!({"type": "LITERAL", "field_type": "DATE_TIME_FIELD", "value": "2020-01-01T00:00:00.123456"});
 
             assert!(str == expected.to_string());
         }
@@ -853,7 +853,7 @@ mod tests {
             let vp = LiteralValuePresenter::DateTimeField(DateTimeFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected =
-                json!({"type": "literal", "field_type": "DATE_TIME_FIELD", "value": null});
+                json!({"type": "LITERAL", "field_type": "DATE_TIME_FIELD", "value": null});
 
             assert!(str == expected.to_string());
         }
@@ -864,7 +864,7 @@ mod tests {
     fn test_make_literal_file_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "file_field",
                 "value": {
                     "object_uuid": "12345678-1234-1234-1234-1234567890ab",
@@ -885,7 +885,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "file_field",
                 "value": null
             });
@@ -901,7 +901,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "file_field"
             });
 
@@ -916,7 +916,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "file_field",
                 "value": 123
             });
@@ -946,7 +946,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "FILE_FIELD",
                 "value": {
                     "object_uuid": "12345678-1234-1234-1234-1234567890ab",
@@ -966,7 +966,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "FILE_FIELD",
                 "value": null
             });
@@ -980,7 +980,7 @@ mod tests {
     fn test_make_literal_multiple_line_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "multiple_line_field",
                 "value": {
                     "doc": {
@@ -1001,7 +1001,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "multiple_line_field",
                 "value": null
             });
@@ -1017,7 +1017,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "multiple_line_field"
             });
 
@@ -1032,7 +1032,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "multiple_line_field",
                 "value": 123
             });
@@ -1066,7 +1066,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "MULTIPLE_LINE_FIELD",
                 "value": {
                     "doc": {
@@ -1085,7 +1085,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "MULTIPLE_LINE_FIELD",
                 "value": null
             });
@@ -1099,7 +1099,7 @@ mod tests {
     fn test_make_literal_number_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "numeric_field",
                 "value": 123 as i64
             });
@@ -1115,7 +1115,7 @@ mod tests {
         // float
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "numeric_field",
                 "value": 123.123 as f64
             });
@@ -1133,7 +1133,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "numeric_field",
                 "value": null
             });
@@ -1149,7 +1149,7 @@ mod tests {
         // value is not present, so we should get None
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "numeric_field",
             });
 
@@ -1164,7 +1164,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "numeric_field",
                 "value": "123"
             });
@@ -1191,7 +1191,7 @@ mod tests {
             let expected: Value = serde_json::from_str(
                 r#"
                 {
-                    "type": "literal",
+                    "type": "LITERAL",
                     "field_type": "NUMERIC_FIELD",
                     "value": 123
                 }"#,
@@ -1209,7 +1209,7 @@ mod tests {
             let expected: Value = serde_json::from_str(
                 r#"
                 {
-                    "type": "literal",
+                    "type": "LITERAL",
                     "field_type": "NUMERIC_FIELD",
                     "value": 123.1
                 }"#,
@@ -1227,7 +1227,7 @@ mod tests {
             let expected: Value = serde_json::from_str(
                 r#"
                 {
-                    "type": "literal",
+                    "type": "LITERAL",
                     "field_type": "NUMERIC_FIELD",
                     "value": null
                 }"#,
@@ -1243,7 +1243,7 @@ mod tests {
     fn test_make_literal_radio_button_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "radio_button_field",
                 "value": {
                     "options": ["option"],
@@ -1265,7 +1265,7 @@ mod tests {
         // test null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "radio_button_field",
                 "value": null
             });
@@ -1281,7 +1281,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "radio_button_field",
             });
 
@@ -1296,7 +1296,7 @@ mod tests {
         // test invalid options count
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "radio_button_field",
                 "value": {
                     "options": ["option1", "option2"],
@@ -1318,7 +1318,7 @@ mod tests {
         // test invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "radio_button_field",
                 "value": "invalid"
             });
@@ -1346,7 +1346,7 @@ mod tests {
             ));
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "RADIO_BUTTON_FIELD",
                 "value": {"options": ["option"], "other": null}
             });
@@ -1364,7 +1364,7 @@ mod tests {
             ));
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "RADIO_BUTTON_FIELD",
                 "value": {"options": [], "other": "other"}
             });
@@ -1382,7 +1382,7 @@ mod tests {
             ));
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "RADIO_BUTTON_FIELD",
                 "value": {"options": [], "other": null}
             });
@@ -1395,7 +1395,7 @@ mod tests {
             let vp = LiteralValuePresenter::RadioButtonField(RadioButtonFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "RADIO_BUTTON_FIELD",
                 "value": null
             });
@@ -1409,7 +1409,7 @@ mod tests {
     fn test_make_literal_relation_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "relation_field",
                 "value": {
                     "type": "database_row",
@@ -1428,7 +1428,7 @@ mod tests {
         // test null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "relation_field",
                 "value": null
             });
@@ -1444,7 +1444,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "relation_field",
             });
 
@@ -1459,7 +1459,7 @@ mod tests {
         // test invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "relation_field",
                 "value": "invalid"
             });
@@ -1488,7 +1488,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "RELATION_FIELD",
                 "value": {
                     "type": "DATABASE_ROW",
@@ -1506,7 +1506,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "RELATION_FIELD",
                 "value": null
             });
@@ -1521,7 +1521,7 @@ mod tests {
     fn test_make_literal_single_line_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "single_line_field",
                 "value": "value"
             });
@@ -1538,7 +1538,7 @@ mod tests {
         // test null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "single_line_field",
                 "value": null
             });
@@ -1554,7 +1554,7 @@ mod tests {
         // value is not present, so we should get None
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "single_line_field"
             });
 
@@ -1569,7 +1569,7 @@ mod tests {
         // test invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "single_line_field",
                 "value": 123
             });
@@ -1594,7 +1594,7 @@ mod tests {
             ));
             let str = vp.to_json().to_string();
             let expected =
-                json!({"type": "literal", "field_type": "SINGLE_LINE_FIELD", "value": "hello"});
+                json!({"type": "LITERAL", "field_type": "SINGLE_LINE_FIELD", "value": "hello"});
 
             assert!(str == expected.to_string());
         }
@@ -1604,7 +1604,7 @@ mod tests {
             let vp = LiteralValuePresenter::SingleLineField(SingleLineFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected =
-                json!({"type": "literal", "field_type": "SINGLE_LINE_FIELD", "value": null});
+                json!({"type": "LITERAL", "field_type": "SINGLE_LINE_FIELD", "value": null});
 
             assert!(str == expected.to_string());
         }
@@ -1616,7 +1616,7 @@ mod tests {
     fn test_make_literal_table_row_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "table_row_field",
                 "value": "67e55044-10b1-426f-9247-bb680e5fe0c8"
             });
@@ -1635,7 +1635,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "table_row_field",
                 "value": null
             });
@@ -1651,7 +1651,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "table_row_field"
             });
 
@@ -1666,7 +1666,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "table_row_field",
                 "value": "invalid"
             });
@@ -1692,7 +1692,7 @@ mod tests {
             )));
             let str = vp.to_json().to_string();
             let expected =
-                json!({"type": "literal", "field_type": "TABLE_ROW_FIELD", "value": uuid_str});
+                json!({"type": "LITERAL", "field_type": "TABLE_ROW_FIELD", "value": uuid_str});
 
             assert!(str == expected.to_string());
         }
@@ -1702,7 +1702,7 @@ mod tests {
             let vp = LiteralValuePresenter::TableRowField(TableRowFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected =
-                json!({"type": "literal", "field_type": "TABLE_ROW_FIELD", "value": null});
+                json!({"type": "LITERAL", "field_type": "TABLE_ROW_FIELD", "value": null});
 
             assert!(str == expected.to_string());
         }
@@ -1713,7 +1713,7 @@ mod tests {
     fn test_make_literal_user_boundary_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "user_boundary_field",
                 "value": {
                     "user_uuids": ["67e55044-10b1-426f-9247-bb680e5fe0c8"]
@@ -1735,7 +1735,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "user_boundary_field",
                 "value": null
             });
@@ -1751,7 +1751,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "user_boundary_field"
             });
 
@@ -1766,7 +1766,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "user_boundary_field",
                 "value": "invalid"
             });
@@ -1802,7 +1802,7 @@ mod tests {
             ));
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "USER_BOUNDARY_FIELD",
                 "value": {
                     "user_uuids": [
@@ -1828,7 +1828,7 @@ mod tests {
             let vp = LiteralValuePresenter::UserBoundaryField(UserBoundaryFieldValue::Nil);
             let str = vp.to_json().to_string();
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "USER_BOUNDARY_FIELD",
                 "value": null
             });
@@ -1842,7 +1842,7 @@ mod tests {
     fn test_make_literal_boolean_list_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_list_field",
                 "value": [true, false, null]
             });
@@ -1864,7 +1864,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_list_field",
                 "value": null
             });
@@ -1880,7 +1880,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_list_field",
             });
 
@@ -1895,7 +1895,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_list_field",
                 "value": 123
             });
@@ -1924,7 +1924,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "BOOLEAN_LIST_FIELD",
                 "value": [true, false, null]
             });
@@ -1938,7 +1938,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "BOOLEAN_LIST_FIELD",
                 "value": null
             });
@@ -1952,7 +1952,7 @@ mod tests {
     fn test_make_literal_date_time_list_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "date_time_list_field",
                 "value": [
                     "2020-01-01T00:00:00Z",
@@ -1975,7 +1975,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "date_time_list_field",
                 "value": null
             });
@@ -1991,7 +1991,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "date_time_list_field",
             });
 
@@ -2006,7 +2006,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "date_time_list_field",
                 "value": 123
             });
@@ -2034,7 +2034,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "DATE_TIME_LIST_FIELD",
                 "value": [
                     "2020-01-01T00:00:00",
@@ -2051,7 +2051,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "DATE_TIME_LIST_FIELD",
                 "value": null
             });
@@ -2065,7 +2065,7 @@ mod tests {
     fn test_make_literal_numeric_list_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "numeric_list_field",
                 "value": [
                     1,
@@ -2091,7 +2091,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "numeric_list_field",
                 "value": null
             });
@@ -2107,7 +2107,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "numeric_list_field",
             });
 
@@ -2122,7 +2122,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "numeric_list_field",
                 "value": 123
             });
@@ -2151,7 +2151,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "NUMERIC_LIST_FIELD",
                 "value": [
                     1,
@@ -2169,7 +2169,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "NUMERIC_LIST_FIELD",
                 "value": null
             });
@@ -2183,7 +2183,7 @@ mod tests {
     fn test_make_literal_single_line_list_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "single_line_list_field",
                 "value": [
                     "foo",
@@ -2207,7 +2207,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "single_line_list_field",
                 "value": null
             });
@@ -2223,7 +2223,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "single_line_list_field",
             });
 
@@ -2238,7 +2238,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "single_line_list_field",
                 "value": 123
             });
@@ -2267,7 +2267,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "SINGLE_LINE_LIST_FIELD",
                 "value": [
                     "foo",
@@ -2285,7 +2285,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "SINGLE_LINE_LIST_FIELD",
                 "value": null
             });
@@ -2299,7 +2299,7 @@ mod tests {
     fn test_make_literal_table_row_list_field_presenter() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "table_row_list_field",
                 "value": [
                     "00000000-0000-0000-0000-000000000000",
@@ -2323,7 +2323,7 @@ mod tests {
         // null value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "table_row_list_field",
                 "value": null
             });
@@ -2339,7 +2339,7 @@ mod tests {
         // value is not present
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "table_row_list_field",
             });
 
@@ -2354,7 +2354,7 @@ mod tests {
         // invalid value
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "table_row_list_field",
                 "value": 123 as i64
             });
@@ -2382,7 +2382,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "TABLE_ROW_LIST_FIELD",
                 "value": [
                     "00000000-0000-0000-0000-000000000000",
@@ -2400,7 +2400,7 @@ mod tests {
             let str = vp.to_json().to_string();
 
             let expected = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "TABLE_ROW_LIST_FIELD",
                 "value": null
             });
