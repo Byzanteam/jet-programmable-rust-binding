@@ -1,15 +1,18 @@
 pub mod error;
 pub mod field_type;
-pub mod field_value;
 pub mod value;
 
-pub mod literal;
+pub mod literal_list_value;
+pub mod literal_naive_value;
+pub mod literal_value;
+
+pub mod literal_value_presenter;
 
 use serde_json::Value;
 
 use error::DecodeError;
 use field_type::FieldType;
-use literal::LiteralValuePresenter;
+use literal_value_presenter::LiteralValuePresenter;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValuePresenter {
@@ -58,7 +61,7 @@ impl ValuePresenter {
 mod tests {
     use serde_json::json;
 
-    use crate::value_presenter::field_value::BooleanFieldValue;
+    use crate::value_presenter::literal_naive_value::BooleanFieldValue;
 
     use super::*;
 
@@ -66,7 +69,7 @@ mod tests {
     fn test_literal_value_presenter_from_json() {
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "boolean_field",
                 "value": true,
             });
@@ -82,7 +85,7 @@ mod tests {
 
         {
             let json = json!({
-                "type": "literal",
+                "type": "LITERAL",
                 "field_type": "BOOLEAN_FIELD",
                 "value": true,
             });
@@ -106,7 +109,7 @@ mod tests {
         assert!(
             vp.to_json()
                 == json!({
-                    "type": "literal",
+                    "type": "LITERAL",
                     "field_type": "BOOLEAN_FIELD",
                     "value": true,
                 })

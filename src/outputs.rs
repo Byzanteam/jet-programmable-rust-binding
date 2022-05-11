@@ -16,7 +16,10 @@ impl Outputs {
 
 #[cfg(test)]
 mod tests {
-    use crate::value_presenter::{field_value::BooleanFieldValue, literal::LiteralValuePresenter};
+
+    use crate::value_presenter::{
+        literal_naive_value::BooleanFieldValue, literal_value_presenter::LiteralValuePresenter,
+    };
 
     use super::*;
     use serde_json::json;
@@ -32,12 +35,12 @@ mod tests {
 
         let expected = json!([
               {
-                  "type": "literal",
+                  "type": "LITERAL",
                   "field_type": "BOOLEAN_FIELD",
                   "value": true
               },
               {
-                  "type": "literal",
+                  "type": "LITERAL",
                   "field_type": "BOOLEAN_FIELD",
                   "value": null
               }
