@@ -22,6 +22,28 @@ pub struct NaiveDateTime {
     pub nanosecond: u32,
 }
 
+impl NaiveDateTime {
+    pub fn new(
+        year: i32,
+        month: u8,
+        day: u8,
+        hour: u8,
+        minute: u8,
+        second: u8,
+        nanosecond: u32,
+    ) -> Self {
+        Self {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+            nanosecond,
+        }
+    }
+}
+
 impl JsonCodec for NaiveDateTime {
     type Err = ParseNaiveDateTimeError;
 
