@@ -74,37 +74,66 @@ impl RelationValue {
     }
 }
 
+fn from_pair(
+    resource_type: &str,
+    resource_uuid: &str,
+) -> Result<RelationValue, ParseRelationValueError> {
+    let resource_type = match ResourceType::parse_str(resource_type) {
+        Ok(resource_type) => resource_type,
+        Err(_) => return Err(ParseRelationValueError::InvalidResourceType),
+    };
+
+    let resource_uuid = match Uuid::new(resource_uuid) {
+        Ok(uuid) => uuid,
+        Err(_) => return Err(ParseRelationValueError::InvalidResourceUuid),
+    };
+
+    Ok(RelationValue {
+        resource_type,
+        resource_uuid,
+    })
+}
+
+fn from_object(object: &Value) -> Result<RelationValue, ParseRelationValueError> {
+    let resource_type = match object.get("type") {
+        Some(type_json) => match type_json.as_str() {
+            Some(s) => s,
+            None => return Err(ParseRelationValueError::InvalidResourceType),
+        },
+        None => return Err(ParseRelationValueError::InvalidResourceType),
+    };
+
+    let resource_uuid = match object.get("uuid") {
+        Some(uuid_json) => match uuid_json.as_str() {
+            Some(s) => s,
+            None => return Err(ParseRelationValueError::InvalidResourceUuid),
+        },
+        None => return Err(ParseRelationValueError::InvalidResourceUuid),
+    };
+
+    from_pair(resource_type, resource_uuid)
+}
+
+fn from_string(string: &Value) -> Result<RelationValue, ParseRelationValueError> {
+    match string.as_str().unwrap().split_once(':') {
+        Some((resource_type, resource_uuid)) => from_pair(resource_type, resource_uuid),
+        _ => Err(ParseRelationValueError::InvalidJson),
+    }
+}
+
 impl JsonCodec for RelationValue {
     type Err = ParseRelationValueError;
 
     fn from_json(value: &Value) -> Result<Self, Self::Err> {
-        if !value.is_object() {
-            return Err(ParseRelationValueError::InvalidJson);
+        if value.is_object() {
+            return from_object(value);
         }
 
-        let resource_type = match value.get("type") {
-            Some(object_uuid) => match object_uuid.as_str() {
-                Some(s) => match ResourceType::parse_str(s) {
-                    Ok(resource_type) => resource_type,
-                    Err(_) => return Err(ParseRelationValueError::InvalidResourceType),
-                },
-                None => return Err(ParseRelationValueError::InvalidResourceType),
-            },
-            None => return Err(ParseRelationValueError::InvalidResourceType),
-        };
+        if value.is_string() {
+            return from_string(value);
+        }
 
-        let resource_uuid = match value.get("uuid") {
-            Some(uuid_json) => match Uuid::from_json(uuid_json) {
-                Ok(uuid) => uuid,
-                Err(_) => return Err(ParseRelationValueError::InvalidResourceUuid),
-            },
-            None => return Err(ParseRelationValueError::InvalidResourceUuid),
-        };
-
-        Ok(RelationValue {
-            resource_type,
-            resource_uuid,
-        })
+        Err(ParseRelationValueError::InvalidJson)
     }
 
     fn to_json(&self) -> Value {
@@ -144,6 +173,36 @@ mod tests {
                 "type": "DATABASE_TABLE",
                 "uuid": "00000000-0000-0000-0000-ffff00000000",
             });
+
+            let relation_value = RelationValue::from_json(&json);
+            assert!(matches!(
+                relation_value,
+                Ok(RelationValue {
+                    resource_type: ResourceType::DatabaseTable,
+                    resource_uuid,
+                }) if resource_uuid == Uuid("00000000-0000-0000-0000-ffff00000000".to_string())
+            ));
+        }
+    }
+
+    #[test]
+    fn test_from_json_with_string_value() {
+        {
+            let json = json!("database_table:00000000-0000-0000-0000-ffff00000000");
+
+            let relation_value = RelationValue::from_json(&json);
+            assert!(matches!(
+                relation_value,
+                Ok(RelationValue {
+                    resource_type: ResourceType::DatabaseTable,
+                    resource_uuid,
+                }) if resource_uuid == Uuid("00000000-0000-0000-0000-ffff00000000".to_string())
+            ));
+        }
+
+        // UPPER_CASE type
+        {
+            let json = json!("DATABASE_TABLE:00000000-0000-0000-0000-ffff00000000");
 
             let relation_value = RelationValue::from_json(&json);
             assert!(matches!(
