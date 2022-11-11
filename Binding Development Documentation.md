@@ -349,5 +349,35 @@ mod定义了总的数据结构ValuePresenter，并编写了关键的方法，例
 继续深入就是literal_value_presenter.rs. LiteralValuePresenter定义了子面值的呈现并为其实现了相应的组件方法，native和list就是相当于最后一层封装，定义对应了方法
 
 value是每个类型的具体实现
-
-<img width="270" alt="截屏2022-11-09 15 50 35" src="https://user-images.githubusercontent.com/91400014/200774277-a3a025ea-b88b-4a9e-a8b9-0d5fa0654174.png">
+```bash
+├── Binding Development Documentation.md
+├── Cargo.toml
+├── README.md
+└── src
+    ├── hostcalls
+    │   └── mod.rs
+    ├── inputs.rs
+    ├── lib.rs
+    ├── outputs.rs
+    ├── scaffolding.rs
+    └── value_presenter
+        ├── error.rs
+        ├── field_type.rs
+        ├── literal_list_value.rs
+        ├── literal_naive_value.rs
+        ├── literal_value.rs
+        ├── literal_value_presenter.rs
+        ├── mod.rs
+        └── value
+            ├── cascader_value.rs
+            ├── file_object.rs
+            ├── json_codec.rs
+            ├── mod.rs
+            ├── naive_date_time.rs
+            ├── number.rs
+            ├── options_value.rs
+            ├── prosemirror.rs
+            ├── relation_value.rs
+            ├── user_boundary.rs
+            └── uuid.rs
+```
