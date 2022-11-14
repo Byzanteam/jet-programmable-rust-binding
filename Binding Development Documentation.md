@@ -21,15 +21,15 @@ program!(
 `entrypoint` 定义有点长，不急我们一个个来看
 
 ```
-fn entrypoint(inputs: Vec<ValuePresenter>) -> Outputs {//首先传入一个类型为ValuePresenter的数组
-    let first = inputs.get(0).unwrap(); /将传入数组分开
-    let second = inputs.get(1).unwrap(); //获得两个值分别为first和second
+fn entrypoint(inputs: Vec<ValuePresenter>) -> Outputs {// 首先传入一个类型为ValuePresenter的数组
+    let first = inputs.get(0).unwrap(); // 将传入数组分开
+    let second = inputs.get(1).unwrap(); // 获得两个值分别为first和second
 
-    let sum: Number = add(extract_number(first), extract_number(second)); //在这里调用了add函数返回一个类型为Number的值
+    let sum: Number = add(extract_number(first), extract_number(second)); // 在这里调用了add函数返回一个类型为Number的值
 
     Outputs::build(vec![ValuePresenter::Literal(
         LiteralValuePresenter::NumericField(NumericFieldValue::Value(sum)),
-    )]) //利用Outputs build包装后返回一个Outpust类型
+    )]) // 利用Outputs build包装后返回一个Outpust类型
 }
 
 ```
@@ -38,9 +38,9 @@ fn entrypoint(inputs: Vec<ValuePresenter>) -> Outputs {//首先传入一个类�
 
 ```
 pub enum ValuePresenter {
-    Literal(LiteralValuePresenter), //一个自定义的枚举类型，但是又引入啦一个新的问题LiteralValuePresenter是什么
+    Literal(LiteralValuePresenter), // 一个自定义的枚举类型，但是又引入啦一个新的问题LiteralValuePresenter是什么
 }
-//下面就是LiteralValuePresenter，哇偶又是一个枚举，不慌我们继续
+// 下面就是LiteralValuePresenter，哇偶又是一个枚举，不慌我们继续
 #[derive(Debug, Clone, PartialEq)]
 pub enum LiteralValuePresenter {
     BooleanField(BooleanFieldValue),
@@ -49,7 +49,7 @@ pub enum LiteralValuePresenter {
     DateTimeField(DateTimeFieldValue),
     FileField(FileFieldValue),
     MultipleLineField(MultipleLineFieldValue),
-    NumericField(NumericFieldValue), //我们的例子是加法，所以我们会用到这个
+    NumericField(NumericFieldValue), // 我们的例子是加法，所以我们会用到这个
     RadioButtonField(RadioButtonFieldValue),
     RelationField(RelationFieldValue),
     SingleLineField(SingleLineFieldValue),
@@ -67,14 +67,14 @@ pub enum LiteralValuePresenter {
     SingleLineListField(SingleLineListFieldValue),
     TableRowListField(TableRowListFieldValue),
 }
-//以我们用到的例子为例，我们继续往下挖，是不是有点兴奋呢
-//oh my god! 又是一个枚举,但是我们离真相已经很近啦
+// 以我们用到的例子为例，我们继续往下挖，是不是有点兴奋呢
+// oh my god! 又是一个枚举,但是我们离真相已经很近啦
 pub enum NumericFieldValue {
     Value(Number),
     Nil,
 }
-//我们继续一点点就行
-//Number的定义就是整数和浮点数
+// 我们继续一点点就行
+// Number的定义就是整数和浮点数
 pub enum Number {
     Integer(i64),
     Float(f64),
@@ -87,7 +87,7 @@ pub enum Number {
 ```
 let sum: Number = add(extract_number(first), extract_number(second));
 
-//我们一层一层的看，首先extract_number传入我们上面解释过的ValuePresenter，返回一个Number，Number的定义我们也看见啦
+// 我们一层一层的看，首先extract_number传入我们上面解释过的ValuePresenter，返回一个Number，Number的定义我们也看见啦
 fn extract_number(value_presenter: &ValuePresenter) -> Number {
     match value_presenter {
         ValuePresenter::Literal(LiteralValuePresenter::NumericField(NumericFieldValue::Value(
@@ -100,7 +100,7 @@ fn extract_number(value_presenter: &ValuePresenter) -> Number {
     }
 }
 
-//现在我们在看 add 是不是很清楚，传入我们上面获取的两个类型为 Number 的值，因为 Number 有两个值，所以我们需要match进行匹配
+// 现在我们在看 add 是不是很清楚，传入我们上面获取的两个类型为 Number 的值，因为 Number 有两个值，所以我们需要match进行匹配
 fn add(a: Number, b: Number) -> Number {
     match (a, b) {
         (Number::Integer(first), Number::Integer(second)) => Number::Integer(first + second),
@@ -117,7 +117,7 @@ fn add(a: Number, b: Number) -> Number {
 ```
  Outputs::build(vec![ValuePresenter::Literal(
      LiteralValuePresenter::NumericField(NumericFieldValue::Value(sum)),
- )]) //利用Outputs build包装后返回一个Outpust类型
+ )]) // 利用Outputs build包装后返回一个Outpust类型
 
 ```
 
@@ -145,9 +145,9 @@ impl Outputs {
 ```
 program!(
     entrypoint,//传入的是一个函数，返回值是outputs
-    vec![FieldType::NumericField, FieldType::NumericField]//这个是不是很眼熟，
+    vec![FieldType::NumericField, FieldType::NumericField]// 这个是不是很眼熟，
 );
-//没错就是这个，证明我们传入的参数是什么类型的
+// 没错就是这个，证明我们传入的参数是什么类型的
 pub enum NumericFieldValue {
     Value(Number),
     Nil,
@@ -176,9 +176,9 @@ macro_rules! program {
 #[doc(hidden)]
 pub fn wrap_run<F>(inputs: &str, entrypoint: F, types: Vec<FieldType>)
 where
-    F: Fn(Vec<ValuePresenter>) -> Outputs, //规定F是实现了这个
+    F: Fn(Vec<ValuePresenter>) -> Outputs, // 规定F是实现了这个
 {
-    let json: Value = match serde_json::from_str(inputs) { //将输入的值类型转化为Value
+    let json: Value = match serde_json::from_str(inputs) { // 将输入的值类型转化为Value
         Ok(json) => json,
         Err(err) => panic!("Failed to parse inputs: {}", err),
     };
@@ -204,14 +204,14 @@ let json: Value = match serde_json::from_str(inputs) {
         Ok(json) => json,
         Err(err) => panic!("Failed to parse inputs: {}", err),
  };
-//下面是serde_json::from_str库的代码
-pub fn from_str<'a, T>(s: &'a str) -> Result<T> //这里返回的是一个Result
+// 下面是serde_json::from_str库的代码
+pub fn from_str<'a, T>(s: &'a str) -> Result<T> // 这里返回的是一个Result
 where
     T: de::Deserialize<'a>,
 {
     from_trait(read::StrRead::new(s))
-}
-//下面是库 Value 定义，我们删除掉部分注释，现在就是非常的清楚明了啦
+} 
+// 下面是库 Value 定义，我们删除掉部分注释，现在就是非常的清楚明了啦
 pub enum Value {
 
     Null,
@@ -246,24 +246,24 @@ pub enum Value {
 ```
 pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>, DecodeError> {
     match args {
-        Value::Array(list) => { //匹配出args的值 list是一个 vec数组 类型 &Vec<Value>
-            let types_len = types.len(); //获取types长度
+        Value::Array(list) => { // 匹配出args的值 list是一个 vec数组 类型 &Vec<Value>
+            let types_len = types.len(); // 获取types长度
 
             let pairs = types.into_iter().zip(list.iter());
-            //上面这句的意思就是将她一一对应，类似变成了元组结构体
-            //下面就是看看长度是不是相等
+            // 上面这句的意思就是将她一一对应，类似变成了元组结构体
+            // 下面就是看看长度是不是相等
             if pairs.len() != types_len {
                 panic!("Invalid number of inputs");
             }
-            //创建一个可变的 result vec 数组值的类型为 ValuePresenter
+            // 创建一个可变的 result vec 数组值的类型为 ValuePresenter
             let mut result: Vec<ValuePresenter> = Vec::new();
 
-            for (field_type, value) in pairs { //利用 for 循环拆开
+            for (field_type, value) in pairs { // 利用 for 循环拆开
                 if value.is_object() {
-                    match ValuePresenter::from_json(value) { //这个是枚举的方法
+                    match ValuePresenter::from_json(value) { // 这个是枚举的方法
                         Ok(vp) => {
                             if vp.get_field_type() == field_type {
-                                result.push(vp); //更新我们创建的 vec 数组将值添加进去
+                                result.push(vp); // 更新我们创建的 vec 数组将值添加进去
                             } else {
                                 return Err(DecodeError::MismatchedFieldType {
                                     value_presenter: vp,
@@ -278,7 +278,7 @@ pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>,
                 }
             }
 
-            Ok(result) //所以这里本质返回的就是一个Vec<ValuePresenter>数组
+            Ok(result) // 所以这里本质返回的就是一个Vec<ValuePresenter>数组
         }
         value => Err(DecodeError::InvalidJsonObject(value)),
     }
@@ -292,7 +292,7 @@ pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>,
 ```
 pub fn from_json(json: &Value) -> Result<Self, DecodeError> {
         if !json.is_object() {
-            return Err(DecodeError::InvalidJsonObject(json)); //判断是不是一个对象
+            return Err(DecodeError::InvalidJsonObject(json)); // 判断是不是一个对象
         }
 
         match json.get("type") {
@@ -335,7 +335,7 @@ pub struct Outputs(pub Vec<ValuePresenter>);
 
 ```
 let str = outputs.to_json().to_string();
-//最后调用hostcall_set_outputs传入地址和长度
+// 最后调用hostcall_set_outputs传入地址和长度
     unsafe {
         hostcall_set_outputs(str.as_ptr(), str.len());
     }
