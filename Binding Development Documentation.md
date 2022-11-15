@@ -1,18 +1,18 @@
 # Binding Development Documentation
 
-**我们以一个例子来说明binding的开发流程**
+**我们以一个例子来说明 `binding` 的开发流程**
 
-**stunning-wasm integer-sum 一个简单的求和案例**
+`stunning-wasm integer-sum`  一个简单的求和案例
 
 ## integer-sum
 
 入口函数及参数介绍
 
-- program! rust宏 具有两个参数可以把它具象为一个函数
+- `program!` `rust` 宏 具有两个参数可以把它具象为一个函数
   
-- entrypoint 定义传入参数，是一个函数
+- `entrypoint` 定义传入参数，是一个函数
   
-- vec![FieldType::NumericField, FieldType::NumericField] `vec!`动态数组
+- `vec![FieldType::NumericField, FieldType::NumericField]`   `vec!` 动态数组
   
 
 ```rust
@@ -26,40 +26,40 @@ program!(
 
 rust宏 具有两个参数
 
-- entrypoint
+- `entrypoint`
   
-- vec![FieldType::NumericField, FieldType::NumericField]
+- `vec![FieldType::NumericField, FieldType::NumericField]`
   
 
 ### Entrypoint
 
-- ValuePresenter
+- `ValuePresenter`
   
-- extract_number 函数
+- `extract_number` 函数
   
-- add 函数
+- `add` 函数
   
-- Outputs
+- `Outputs`
   
 
-总体概览，传入一个类型为`ValuePresenter`的`Vec`动态数组，返回值为`Outputs`
+总体概览，传入一个类型为 `ValuePresenter` 的 `Vec` 动态数组，返回值为 `Outputs`
 
 ```rust
-fn entrypoint(inputs: Vec<ValuePresenter>) -> Outputs {// 首先传入一个类型为ValuePresenter的数组
+fn entrypoint(inputs: Vec<ValuePresenter>) -> Outputs { // 首先传入一个类型为 ValuePresenter 的数组
     let first = inputs.get(0).unwrap(); // 将传入数组分开
-    let second = inputs.get(1).unwrap(); // 获得两个值分别为first和second
+    let second = inputs.get(1).unwrap(); // 获得两个值分别为 first 和 second
 
-    let sum: Number = add(extract_number(first), extract_number(second)); // 在这里调用了add函数返回一个类型为Number的值
+    let sum: Number = add(extract_number(first), extract_number(second)); // 在这里调用了 add 函数返回一个类型为 Number 的值
 
     Outputs::build(vec![ValuePresenter::Literal(
         LiteralValuePresenter::NumericField(NumericFieldValue::Value(sum)),
-    )]) // 利用Outputs build包装后返回一个Outpust类型
+    )]) // 利用 Outputs build 包装后返回一个 Outpust 类型
 }
 ```
 
 #### Entrypoint 参数 ValuePresenter
 
-ValuePresenter是一个自定义的枚举类型，类型为LiteralValuePresenter
+`ValuePresenter` 是一个自定义的枚举类型，类型为 `LiteralValuePresenter`
 
 ```rust
 pub enum ValuePresenter {
@@ -69,7 +69,7 @@ pub enum ValuePresenter {
 
 ##### LiteralValuePresenter
 
-LiteralValuePresenter也是自定义枚举类型，我们以使用的例子为准，继续深入了解。
+`LiteralValuePresenter` 也是自定义枚举类型，我们以使用的例子为准，继续深入了解。
 
 ```rust
 #[derive(Debug, Clone, PartialEq)]
@@ -128,7 +128,7 @@ pub enum Number {
 
 #### extract_number 函数
 
-extract_number传入我们上面解释过的 `ValuePresenter`，返回一个 `Number`
+`extract_number` 传入我们上面解释过的 `ValuePresenter`，返回一个 `Number`
 
 根据代码分析
 
@@ -156,7 +156,7 @@ add函数接受我们 `extract_number` 函数返回的类型为 `Number` 的值�
 
 ```rust
 fn add(a: Number, b: Number) -> Number {
-    // match将 Number 类型解构为基础的数据类型
+    // match 将 Number 类型解构为基础的数据类型
     match (a, b) {
         (Number::Integer(first), Number::Integer(second)) => Number::Integer(first + second),
         (Number::Integer(first), Number::Float(second)) => Number::Float(first as f64 + second),
@@ -174,12 +174,12 @@ fn add(a: Number, b: Number) -> Number {
 
 `Self` 也就是说返回值为 `Outputs` 结构体
 
-但是传入的是 `vec` 数组，所以我们需要将他包装为 `vec` 类型，但是由于是 `ValuePresenter` 类型，所以我们需要将`Number` 重新封装为 `ValuePresenter`
+但是传入的是 `vec` 数组，所以我们需要将他包装为 `vec` 类型，但是由于是 `ValuePresenter` 类型，所以我们需要将 `Number` 重新封装为 `ValuePresenter`
 
 ```rust
  Outputs::build(vec![ValuePresenter::Literal(
      LiteralValuePresenter::NumericField(NumericFieldValue::Value(sum)),
- )]) // 利用Outputs build包装后返回一个Outpust类型
+ )]) // 利用 Outputs build 包装后返回一个 Outpust 类型
 ```
 
 ##### Outputs build
@@ -213,8 +213,8 @@ pub enum NumericFieldValue {
 
 ```rust
 program!(
-    entrypoint,//传入的是一个函数，返回值是outputs
-    vec![FieldType::NumericField, FieldType::NumericField]// 这个是不是很眼熟，
+    entrypoint, // 传入的是一个函数，返回值是outputs
+    vec![FieldType::NumericField, FieldType::NumericField] // 这个是不是很眼熟，
 );
 // 没错就是这个，证明我们传入的参数是什么类型的
 pub enum NumericFieldValue {
@@ -227,13 +227,13 @@ pub enum NumericFieldValue {
 
 整体架构就是一个宏列出了参数和函数
 
-- entrypoint
+- `entrypoint`
   
-- types
+- `types`
   
-- run
+- `run`
   
-- wrap_run
+- `wrap_run`
   
 
 ```rust
@@ -256,9 +256,9 @@ macro_rules! program {
 #[doc(hidden)]
 pub fn wrap_run<F>(inputs: &str, entrypoint: F, types: Vec<FieldType>)
 where
-    F: Fn(Vec<ValuePresenter>) -> Outputs, // 说明泛型F实现Fn(Vec<ValuePresenter>) -> Outputs这个特征
+    F: Fn(Vec<ValuePresenter>) -> Outputs, // 说明泛型 F 实现 Fn(Vec<ValuePresenter>) -> Outputs 这个特征
 {
-    let json: Value = match serde_json::from_str(inputs) { // 将输入的值类型转化为Value
+    let json: Value = match serde_json::from_str(inputs) { // 将输入的值类型转化为 Value
         Ok(json) => json,
         Err(err) => panic!("Failed to parse inputs: {}", err),
     };
@@ -283,8 +283,8 @@ let json: Value = match serde_json::from_str(inputs) {
         Ok(json) => json,
         Err(err) => panic!("Failed to parse inputs: {}", err),
  };
-// 下面是serde_json::from_str库的代码
-pub fn from_str<'a, T>(s: &'a str) -> Result<T> // 这里返回的是一个Result
+// 下面是 serde_json::from_str 库的代码
+pub fn from_str<'a, T>(s: &'a str) -> Result<T> // 这里返回的是一个 Result
 where
     T: de::Deserialize<'a>,
 {
@@ -323,8 +323,8 @@ pub enum Value {
 ```rust
 pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>, DecodeError> {
     match args {
-        Value::Array(list) => { // 匹配出args的值 list是一个 vec数组 类型 &Vec<Value>
-            let types_len = types.len(); // 获取types长度
+        Value::Array(list) => { // 匹配出 args 的值 list 是一个 vec 数组 类型 &Vec<Value>
+            let types_len = types.len(); // 获取 types 长度
 
             let pairs = types.into_iter().zip(list.iter());
             // 上面这句的意思就是将她一一对应，类似变成了元组结构体
@@ -355,7 +355,7 @@ pub fn parse(args: &Value, types: Vec<FieldType>) -> Result<Vec<ValuePresenter>,
                 }
             }
 
-            Ok(result) // 所以这里本质返回的就是一个Vec<ValuePresenter>数组
+            Ok(result) // 所以这里本质返回的就是一个 Vec<ValuePresenter> 数组
         }
         value => Err(DecodeError::InvalidJsonObject(value)),
     }
@@ -413,9 +413,9 @@ let str = outputs.to_json().to_string();
     }
 ```
 
-这个是 `to_json()` 方法，他是 `Outputs`结构体的方法，返回值是一个 `Value`，是我们上面提到的 `serde_json` 定义的 `Value`
+这个是 `to_json()` 方法，他是 `Outputs` 结构体的方法，返回值是一个 `Value`，是我们上面提到的 `serde_json` 定义的 `Value`
 
-Outpust 是一个 `vec` 数组
+`Outpust` 是一个 `vec` 数组
 
 ```rust
 pub fn to_json(&self) -> Value {
