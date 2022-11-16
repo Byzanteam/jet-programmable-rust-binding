@@ -4,7 +4,7 @@ use super::json_codec::JsonCodec;
 
 type OptionValue = String;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OptionsValue {
     pub options: Vec<OptionValue>,
     pub other: Option<OptionValue>,

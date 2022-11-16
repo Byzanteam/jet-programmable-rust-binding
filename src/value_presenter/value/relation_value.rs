@@ -2,7 +2,7 @@ use serde_json::{json, Value};
 
 use super::{json_codec::JsonCodec, uuid::Uuid};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ResourceType {
     DatabaseTable,
     DatabaseRow,

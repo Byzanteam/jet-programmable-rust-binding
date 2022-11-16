@@ -11,7 +11,7 @@ use super::json_codec::JsonCodec;
 #[derive(Debug)]
 pub struct ParseNaiveDateTimeError;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NaiveDateTime {
     pub year: i32,
     pub month: u8,

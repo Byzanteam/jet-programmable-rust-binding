@@ -67,7 +67,7 @@ pub enum RelationFieldValue {
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SingleLineFieldValue {
     Value(String),
     Nil,

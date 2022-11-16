@@ -1,7 +1,7 @@
 use super::field_type::FieldType;
 use serde_json::Value;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseLiteralValueError;
 
 pub trait LiteralValue {
