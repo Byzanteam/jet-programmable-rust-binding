@@ -9,7 +9,7 @@ pub enum ParseCascaderValueError {
     InvalidRowUuid,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CascaderValue {
     pub options_table_uuid: Uuid,
     pub row_uuid: Uuid,

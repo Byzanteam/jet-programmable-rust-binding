@@ -11,7 +11,7 @@ pub enum ParseFileObjectError {
     InvalidMimetype,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FileObject {
     pub object_uuid: Uuid,
     pub filename: String,
