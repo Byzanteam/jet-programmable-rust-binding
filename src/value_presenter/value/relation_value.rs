@@ -2,7 +2,7 @@ use serde_json::{json, Value};
 
 use super::{json_codec::JsonCodec, uuid::Uuid};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ResourceType {
     DatabaseTable,
     DatabaseRow,
@@ -59,7 +59,7 @@ pub enum ParseRelationValueError {
     InvalidResourceUuid,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RelationValue {
     pub resource_type: ResourceType,
     pub resource_uuid: Uuid,

@@ -10,31 +10,31 @@ use super::{
     literal_value::{LiteralValue, ParseLiteralValueError},
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BooleanListFieldValue {
     Value(Vec<BooleanFieldValue>),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CascaderListFieldValue {
     Value(Vec<CascaderFieldValue>),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DateTimeListFieldValue {
     Value(Vec<DateTimeFieldValue>),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FileListFieldValue {
     Value(Vec<FileFieldValue>),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MultipleLineListFieldValue {
     Value(Vec<MultipleLineFieldValue>),
     Nil,
@@ -46,19 +46,19 @@ pub enum NumericListFieldValue {
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RelationListFieldValue {
     Value(Vec<RelationFieldValue>),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SingleLineListFieldValue {
     Value(Vec<SingleLineFieldValue>),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TableRowListFieldValue {
     Value(Vec<TableRowFieldValue>),
     Nil,

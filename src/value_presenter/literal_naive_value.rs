@@ -13,37 +13,37 @@ use super::value::{
     user_boundary::UserBoundary, uuid::Uuid,
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BooleanFieldValue {
     Value(bool),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CascaderFieldValue {
     Value(CascaderValue),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CheckboxFieldValue {
     Value(OptionsValue),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DateTimeFieldValue {
     Value(NaiveDateTime),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FileFieldValue {
     Value(FileObject),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MultipleLineFieldValue {
     Value(ProsemirrorState),
     Nil,
@@ -55,31 +55,31 @@ pub enum NumericFieldValue {
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RadioButtonFieldValue {
     Value(OptionsValue),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RelationFieldValue {
     Value(RelationValue),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SingleLineFieldValue {
     Value(String),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TableRowFieldValue {
     Value(Uuid),
     Nil,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UserBoundaryFieldValue {
     Value(UserBoundary),
     Nil,

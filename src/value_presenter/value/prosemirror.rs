@@ -2,7 +2,7 @@ use serde_json::{json, Value};
 
 use super::json_codec::JsonCodec;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProsemirrorState {
     pub doc: Value,
 }
