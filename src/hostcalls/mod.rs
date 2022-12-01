@@ -8,12 +8,12 @@ extern "C" {
     /// * `inputs_ptr` - RequestData Pointer to data
     /// * `inputs_len` - RequestData Length of data
     /// * `new_ptr` - ResponseData Pointer to data
-    ///
+    /// 
     /// # So the number returned is the length of the response data
-    ///
+    /// 
     /// # Examples
     /// ## RequestData
-    /// ```
+    /// ```no_run
     /// #[derive(Serialize)]
     /// struct RequestData {
     ///     method: String,
@@ -23,7 +23,7 @@ extern "C" {
     /// }
     /// ```
     /// ## Code Example
-    /// ```
+    /// ```no_run    
     /// let json = RequestData {
     ///     method: "GET".to_string(),
     ///     url: "https://rust-lang.org/".to_string(),
