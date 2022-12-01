@@ -23,7 +23,7 @@ extern "C" {
     /// }
     /// ```
     /// ## Code Example
-    /// ```no_run    
+    /// ```no_run
     /// let json = RequestData {
     ///     method: "GET".to_string(),
     ///     url: "https://rust-lang.org/".to_string(),
