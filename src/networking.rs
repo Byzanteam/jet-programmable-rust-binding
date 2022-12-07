@@ -142,3 +142,72 @@ pub fn request(request_data: NetworkingRequest) -> &'static str {
         str::from_utf8(slice).unwrap()
     }
 }
+
+pub fn request_test(request_data: NetworkingRequest) -> ResponseData {
+    let request_data = serde_json::to_string(&request_data).unwrap();
+    let mut response_data = "";
+    response_data = unsafe {
+        let len = hostcall_networking_request(
+            request_data.as_ptr(),
+            request_data.len(),
+            response_data.as_ptr(),
+        );
+        let slice = slice::from_raw_parts(response_data.as_ptr(), len);
+        str::from_utf8(slice).unwrap()
+    };
+    let response_data: NetworkingResponse = serde_json::from_str(response_data).unwrap();
+    response_data.response_data()
+}
+
+////////////////////////////////////////////////////////////////
+/// 原以为是不能传递非存储在栈上的数据，所以使用智能指针传递静态的引用，直到程序死亡才会消除，不存在悬垂引用
+pub fn request_test1(request_data: NetworkingRequest) -> &'static mut ResponseData {
+    let request_data = serde_json::to_string(&request_data).unwrap();
+    let mut response_data = "";
+    response_data = unsafe {
+        let len = hostcall_networking_request(
+            request_data.as_ptr(),
+            request_data.len(),
+            response_data.as_ptr(),
+        );
+        let slice = slice::from_raw_parts(response_data.as_ptr(), len);
+        str::from_utf8(slice).unwrap()
+    };
+    let response_data: NetworkingResponse = serde_json::from_str(response_data).unwrap();
+    Box::leak(Box::new(response_data.response_data()))
+}
+////////////////////////////////////////////////////////////////
+/// 只反序列化，不操作也会报错
+pub fn request_test2(request_data: NetworkingRequest) -> usize {
+    let request_data = serde_json::to_string(&request_data).unwrap();
+    let mut response_data = "";
+    response_data = unsafe {
+        let len = hostcall_networking_request(
+            request_data.as_ptr(),
+            request_data.len(),
+            response_data.as_ptr(),
+        );
+        let slice = slice::from_raw_parts(response_data.as_ptr(), len);
+        str::from_utf8(slice).unwrap()
+    };
+    let response_data: NetworkingResponse = serde_json::from_str(response_data).unwrap();
+    response_data.code.unwrap().into()
+}
+
+////////////////////////////////////////////////////////////////
+/// 只反序列化 这样也报错
+pub fn request_test3(request_data: NetworkingRequest) -> usize {
+    let request_data = serde_json::to_string(&request_data).unwrap();
+    let mut response_data = "";
+    response_data = unsafe {
+        let len = hostcall_networking_request(
+            request_data.as_ptr(),
+            request_data.len(),
+            response_data.as_ptr(),
+        );
+        let slice = slice::from_raw_parts(response_data.as_ptr(), len);
+        str::from_utf8(slice).unwrap()
+    };
+    let _response_data: NetworkingResponse = serde_json::from_str(response_data).unwrap();
+    8
+}
