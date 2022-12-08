@@ -4,168 +4,107 @@ use std::slice;
 use std::str;
 
 
-pub enum NetworkingRequest {
-    Get(Get),
-    Post(Post),
-    Delete(Delete),
-    Put(Put),
-    Patch(Patch), //Additions to the put method
-    Head(Head), //same as get
-    Options(Options),
+
+#[derive(Debug, Serialize)]
+pub enum NetworkingRequestMethod {
+    Get,
+    Post,
+    Delete,
+    Put,
+    Patch, //Additions to the put method
+    Head,  //same as get
+    Options,
 }
-#[derive(Serialize)]
-pub struct Get {
-    pub method: String,
+
+pub type NetworkingHeaders = Vec<(String, String)>;
+pub type NetworkingBody = Option<Vec<u8>>;
+
+#[derive(Debug, Serialize)]
+pub struct NetworkingRequest {
+    pub method: NetworkingRequestMethod,
     pub url: String,
+    pub headers: NetworkingHeaders,
+    pub body: NetworkingBody,
 }
-impl Get {
-    pub fn request_body(url: String) -> Self {
-        Get {
-            method: "GET".to_string(),
+impl NetworkingRequest {
+    pub fn get(url: String) -> Self {
+        Self {
+            method: NetworkingRequestMethod::Get,
             url,
+            headers: Vec::new(),
+            body: None,
         }
     }
-}
-#[derive(Serialize)]
-pub struct Post {
-    pub method: String,
-    pub url: String,
-    pub body: String,
-    pub headers: Vec<(String, String)>,
-}
-impl Post {
-    pub fn request_body(url: String, body: String, headers: Vec<(String, String)>) -> Self {
-        Post {
-            method: "POST".to_string(),
+    pub fn post(url: String, headers: NetworkingHeaders, body: NetworkingBody) -> Self {
+        Self {
+            method: NetworkingRequestMethod::Post,
             url,
+            headers,
             body,
-            headers,
         }
     }
-}
-#[derive(Serialize)]
-pub struct Put {
-    pub method: String,
-    pub url: String,
-    pub body: String,
-    pub headers: Vec<(String, String)>,
-}
-impl Put {
-    pub fn request_body(url: String, body: String, headers: Vec<(String, String)>) -> Self {
-        Put {
-            method: "PUT".to_string(),
+    pub fn put(url: String, headers: NetworkingHeaders, body: NetworkingBody) -> Self {
+        Self {
+            method: NetworkingRequestMethod::Put,
             url,
+            headers,
             body,
-            headers,
         }
     }
-}
-#[derive(Serialize)]
-pub struct Delete {
-    pub method: String,
-    pub url: String,
-    pub body: String,
-    pub headers: Vec<(String, String)>,
-}
-impl Delete {
-    pub fn request_body(url: String, body: String, headers: Vec<(String, String)>) -> Self {
-        Delete {
-            method: "DELETE".to_string(),
+    pub fn delete(url: String, headers: NetworkingHeaders, body: NetworkingBody) -> Self {
+        Self {
+            method: NetworkingRequestMethod::Delete,
             url,
+            headers,
             body,
-            headers,
         }
     }
-}
-#[derive(Serialize)]
-pub struct Head {
-    pub method: String,
-    pub url: String,
-    pub headers: Vec<(String, String)>,
-}
-impl Head {
-    pub fn request_body(url: String, headers: Vec<(String, String)>) -> Self {
-        Head {
-            method: "HEAD".to_string(),
+    pub fn patch(url: String, headers: NetworkingHeaders, body: NetworkingBody) -> Self {
+        Self {
+            method: NetworkingRequestMethod::Patch,
             url,
             headers,
-        }
-    }
-}
-#[derive(Serialize)]
-pub struct Patch {
-    pub method: String,
-    pub url: String,
-    pub body: String,
-    pub headers: Vec<(String, String)>,
-}
-impl Patch {
-    pub fn request_body(url: String, body: String, headers: Vec<(String, String)>) -> Self {
-        Patch {
-            method: "PATCH".to_string(),
-            url,
             body,
-            headers,
         }
     }
-}
-#[derive(Serialize)]
-pub struct Options {
-    pub method: String,
-    pub url: String,
-}
-impl Options {
-    pub fn request_body(url: String) -> Self {
-        Options {
-            method: "OPTIONS".to_string(),
+    pub fn head(url: String, headers: NetworkingHeaders) -> Self {
+        Self {
+            method: NetworkingRequestMethod::Head,
             url,
+            headers,
+            body: None,
+        }
+    }
+    pub fn options(url: String) -> Self {
+        Self {
+            method: NetworkingRequestMethod::Options,
+            url,
+            headers: Vec::new(),
+            body: None,
         }
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize)]
 pub struct NetworkingResponse {
-    pub code: Option<u8>,
-    pub response: Option<Response>,
-    pub message: Option<String>,
+    pub status: u8,
+    pub headers: NetworkingHeaders,
+    pub body: NetworkingBody,
 }
 
-impl NetworkingResponse {
-    pub fn response_data(self) -> ResponseData {
-        if let Some(_code) = self.code {
-            if let Some(response) = self.response {
-                ResponseData::Response(response)
-            } else if let Some(message) = self.message {
-                ResponseData::Message(message)
-            } else {
-                panic!("UnexpectedResponse")
-            }
-        } else {
-            panic!("UnexpectedResponse")
-        }
-    }
+#[derive(Debug, Deserialize)]
+pub struct NetworkingError {
+    pub code: u8,
+    pub message: String,
 }
-#[derive(Debug)]
-pub enum ResponseData {
-    Message(String),
-    Response(Response),
+
+#[derive(Debug, Deserialize)]
+enum ResponseData {
+    Respose(NetworkingResponse),
+    Error(NetworkingError),
 }
-#[derive(Deserialize, Debug)]
-pub struct Response {
-    pub status: u16,
-    pub headers: Vec<(String, String)>,
-    pub body: Option<String>,
-}
-pub fn request(request_data: NetworkingRequest) -> ResponseData {
-    let request_binary = match request_data {
-        NetworkingRequest::Get(get) => serde_json::to_string(&get).unwrap(),
-        NetworkingRequest::Post(post) => serde_json::to_string(&post).unwrap(),
-        NetworkingRequest::Put(put) => serde_json::to_string(&put).unwrap(),
-        NetworkingRequest::Delete(delete) => serde_json::to_string(&delete).unwrap(),
-        NetworkingRequest::Head(head) => serde_json::to_string(&head).unwrap(),
-        NetworkingRequest::Patch(patch) => serde_json::to_string(&patch).unwrap(),
-        NetworkingRequest::Options(options) => serde_json::to_string(&options).unwrap(),
-    };
+pub fn request(request: NetworkingRequest) -> Result<NetworkingResponse, NetworkingError> {
+    let request_binary = serde_json::to_string(&request).unwrap();
     let mut response_binary = "";
     response_binary = unsafe {
         let len = hostcall_networking_request(
@@ -176,6 +115,9 @@ pub fn request(request_data: NetworkingRequest) -> ResponseData {
         let slice = slice::from_raw_parts(response_binary.as_ptr(), len);
         str::from_utf8(slice).unwrap()
     };
-    let response_data: NetworkingResponse = serde_json::from_str(response_binary).unwrap();
-    response_data.response_data()
+    let response_data: ResponseData = serde_json::from_str(&response_binary).unwrap();
+    match response_data {
+        ResponseData::Respose(response) => Ok(response),
+        ResponseData::Error(error) => Err(error),
+    }
 }
