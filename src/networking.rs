@@ -92,6 +92,21 @@ pub struct NetworkingResponse {
     pub body: NetworkingBody,
 }
 
+impl FromStr for NetworkingResponse {
+    type Err = NetworkingError;
+
+    fn from_str(response_binary: &str) -> Result<Self, Self::Err> {
+        let response_data: NetworkingResponseData = serde_json::from_str(response_binary).unwrap();
+        if let Some(response) = response_data.response{
+            Ok(response)
+        }else if let Some(message) = response_data.message{
+            Err(NetworkingError { code: response_data.code, message })
+        }else{
+            panic!("Unknown response")
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct NetworkingError {
     pub code: u8,
@@ -100,24 +115,11 @@ pub struct NetworkingError {
 
 #[derive(Debug, Deserialize)]
 struct NetworkingResponseData {
-    code: u8,
-    response: Option<NetworkingResponse>,
-    message: Option<String>,
+    pub code: u8,
+    pub response: Option<NetworkingResponse>,
+    pub message: Option<String>,
 }
-impl NetworkingResponseData {
-    pub fn response_or_error(self) -> Result<NetworkingResponse, NetworkingError> {
-        if let Some(response) = self.response {
-            Ok(response)
-        } else if let Some(message) = self.message {
-            Err(NetworkingError {
-                code: self.code,
-                message,
-            })
-        } else {
-            panic!("")
-        }
-    }
-}
+
 pub fn request(request: NetworkingRequest) -> Result<NetworkingResponse, NetworkingError> {
     let request_binary = serde_json::to_string(&request).unwrap();
     let mut response_binary = "";
@@ -130,7 +132,5 @@ pub fn request(request: NetworkingRequest) -> Result<NetworkingResponse, Network
         let slice = slice::from_raw_parts(response_binary.as_ptr(), len);
         str::from_utf8(slice).unwrap()
     };
-    let response_data: NetworkingResponseData = serde_json::from_str(response_binary).unwrap();
-    //师傅 需要判断是否存在，这里感觉是不能使用Value的，因为NetworkingError不是直接string，他是一个新的在这边定义的数据类型，所以我们需要获得数据然后重新组合
-    response_data.response_or_error()
+    NetworkingResponse::from_str(response_binary)
 }
