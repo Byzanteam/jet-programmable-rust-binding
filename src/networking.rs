@@ -25,11 +25,11 @@ pub struct NetworkingRequest {
     pub body: NetworkingBody,
 }
 impl NetworkingRequest {
-    pub fn get(url: String) -> Self {
+    pub fn get(url: String, headers: NetworkingHeaders) -> Self {
         Self {
             method: NetworkingRequestMethod::Get,
             url,
-            headers: Vec::new(),
+            headers,
             body: None,
         }
     }
@@ -73,11 +73,11 @@ impl NetworkingRequest {
             body: None,
         }
     }
-    pub fn options(url: String) -> Self {
+    pub fn options(url: String, headers: NetworkingHeaders) -> Self {
         Self {
-            method: NetworkingRequestMethod::Options,
+            method: NetworkingRequestMethod::Get,
             url,
-            headers: Vec::new(),
+            headers,
             body: None,
         }
     }
@@ -93,8 +93,8 @@ pub struct NetworkingResponse {
 impl FromStr for NetworkingResponse {
     type Err = NetworkingError;
 
-    fn from_str(response_binary: &str) -> Result<Self, Self::Err> {
-        let response_data: NetworkingResponseData = serde_json::from_str(response_binary).unwrap();
+    fn from_str(response_str: &str) -> Result<Self, Self::Err> {
+        let response_data: NetworkingResponseData = serde_json::from_str(response_str).unwrap();
         if let Some(response) = response_data.response{
             Ok(response)
         }else if let Some(message) = response_data.message{
@@ -120,15 +120,15 @@ struct NetworkingResponseData {
 
 pub fn request(request: NetworkingRequest) -> Result<NetworkingResponse, NetworkingError> {
     let request_binary = serde_json::to_string(&request).unwrap();
-    let mut response_binary = "";
-    response_binary = unsafe {
+    let mut response_str = "";
+    response_str = unsafe {
         let len = hostcall_networking_request(
             request_binary.as_ptr(),
             request_binary.len(),
-            response_binary.as_ptr(),
+            response_str.as_ptr(),
         );
-        let slice = slice::from_raw_parts(response_binary.as_ptr(), len);
+        let slice = slice::from_raw_parts(response_str.as_ptr(), len);
         str::from_utf8(slice).unwrap()
     };
-    NetworkingResponse::from_str(response_binary)
+    NetworkingResponse::from_str(response_str)
 }
