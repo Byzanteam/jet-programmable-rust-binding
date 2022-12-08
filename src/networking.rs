@@ -87,7 +87,7 @@ impl NetworkingRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct NetworkingResponse {
-    pub status: u8,
+    pub status: u16,
     pub headers: NetworkingHeaders,
     pub body: NetworkingBody,
 }
@@ -99,9 +99,24 @@ pub struct NetworkingError {
 }
 
 #[derive(Debug, Deserialize)]
-enum ResponseData {
-    Respose(NetworkingResponse),
-    Error(NetworkingError),
+struct NetworkingResponseData {
+    code: u8,
+    response: Option<NetworkingResponse>,
+    message: Option<String>,
+}
+impl NetworkingResponseData {
+    pub fn response_or_error(self) -> Result<NetworkingResponse, NetworkingError> {
+        if let Some(response) = self.response {
+            Ok(response)
+        } else if let Some(message) = self.message {
+            Err(NetworkingError {
+                code: self.code,
+                message,
+            })
+        } else {
+            panic!("")
+        }
+    }
 }
 pub fn request(request: NetworkingRequest) -> Result<NetworkingResponse, NetworkingError> {
     let request_binary = serde_json::to_string(&request).unwrap();
@@ -115,9 +130,7 @@ pub fn request(request: NetworkingRequest) -> Result<NetworkingResponse, Network
         let slice = slice::from_raw_parts(response_binary.as_ptr(), len);
         str::from_utf8(slice).unwrap()
     };
-    let response_data: ResponseData = serde_json::from_str(&response_binary).unwrap();
-    match response_data {
-        ResponseData::Respose(response) => Ok(response),
-        ResponseData::Error(error) => Err(error),
-    }
+    let response_data: NetworkingResponseData = serde_json::from_str(response_binary).unwrap();
+    //师傅 需要判断是否存在，这里感觉是不能使用Value的，因为NetworkingError不是直接string，他是一个新的在这边定义的数据类型，所以我们需要获得数据然后重新组合
+    response_data.response_or_error()
 }
