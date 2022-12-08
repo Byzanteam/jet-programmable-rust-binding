@@ -4,93 +4,121 @@ use std::slice;
 use std::str;
 
 
+pub enum NetworkingRequest {
+    Get(Get),
+    Post(Post),
+    Delete(Delete),
+    Put(Put),
+    Patch(Patch), //Additions to the put method
+    Head(Head), //same as get
+    Options(Options),
+}
 #[derive(Serialize)]
-pub struct NetworkingRequest {
+pub struct Get {
+    pub method: String,
+    pub url: String,
+}
+impl Get {
+    pub fn request_body(url: String) -> Self {
+        Get {
+            method: "GET".to_string(),
+            url,
+        }
+    }
+}
+#[derive(Serialize)]
+pub struct Post {
+    pub method: String,
+    pub url: String,
+    pub body: String,
+    pub headers: Vec<(String, String)>,
+}
+impl Post {
+    pub fn request_body(url: String, body: String, headers: Vec<(String, String)>) -> Self {
+        Post {
+            method: "POST".to_string(),
+            url,
+            body,
+            headers,
+        }
+    }
+}
+#[derive(Serialize)]
+pub struct Put {
+    pub method: String,
+    pub url: String,
+    pub body: String,
+    pub headers: Vec<(String, String)>,
+}
+impl Put {
+    pub fn request_body(url: String, body: String, headers: Vec<(String, String)>) -> Self {
+        Put {
+            method: "PUT".to_string(),
+            url,
+            body,
+            headers,
+        }
+    }
+}
+#[derive(Serialize)]
+pub struct Delete {
+    pub method: String,
+    pub url: String,
+    pub body: String,
+    pub headers: Vec<(String, String)>,
+}
+impl Delete {
+    pub fn request_body(url: String, body: String, headers: Vec<(String, String)>) -> Self {
+        Delete {
+            method: "DELETE".to_string(),
+            url,
+            body,
+            headers,
+        }
+    }
+}
+#[derive(Serialize)]
+pub struct Head {
     pub method: String,
     pub url: String,
     pub headers: Vec<(String, String)>,
-    pub body: Option<String>,
 }
-
-impl NetworkingRequest {
-    pub fn get(url: String, headers: Vec<(String, String)>) -> NetworkingRequest {
-        NetworkingRequest {
-            method: "GET".to_string(),
-            url,
-            headers,
-            body: None,
-        }
-    }
-    pub fn post(
-        url: String,
-        headers: Vec<(String, String)>,
-        body: Option<String>,
-    ) -> NetworkingRequest {
-        NetworkingRequest {
-            method: "POST".to_string(),
-            url,
-            headers,
-            body,
-        }
-    }
-    pub fn put(
-        url: String,
-        headers: Vec<(String, String)>,
-        body: Option<String>,
-    ) -> NetworkingRequest {
-        NetworkingRequest {
-            method: "PUT".to_string(),
-            url,
-            headers,
-            body,
-        }
-    }
-    pub fn delete(
-        url: String,
-        headers: Vec<(String, String)>,
-        body: Option<String>,
-    ) -> NetworkingRequest {
-        NetworkingRequest {
-            method: "DELETE".to_string(),
-            url,
-            headers,
-            body,
-        }
-    }
-    pub fn head(
-        url: String,
-        headers: Vec<(String, String)>,
-        body: Option<String>,
-    ) -> NetworkingRequest {
-        NetworkingRequest {
+impl Head {
+    pub fn request_body(url: String, headers: Vec<(String, String)>) -> Self {
+        Head {
             method: "HEAD".to_string(),
             url,
             headers,
-            body,
         }
     }
-    pub fn patch(
-        url: String,
-        headers: Vec<(String, String)>,
-        body: Option<String>,
-    ) -> NetworkingRequest {
-        NetworkingRequest {
+}
+#[derive(Serialize)]
+pub struct Patch {
+    pub method: String,
+    pub url: String,
+    pub body: String,
+    pub headers: Vec<(String, String)>,
+}
+impl Patch {
+    pub fn request_body(url: String, body: String, headers: Vec<(String, String)>) -> Self {
+        Patch {
             method: "PATCH".to_string(),
             url,
-            headers,
             body,
+            headers,
         }
     }
-    pub fn options(
-        url: String,
-        headers: Vec<(String, String)>,
-        body: Option<String>,
-    ) -> NetworkingRequest {
-        NetworkingRequest {
+}
+#[derive(Serialize)]
+pub struct Options {
+    pub method: String,
+    pub url: String,
+}
+impl Options {
+    pub fn request_body(url: String) -> Self {
+        Options {
             method: "OPTIONS".to_string(),
             url,
-            headers,
-            body,
         }
     }
 }
@@ -128,86 +156,26 @@ pub struct Response {
     pub headers: Vec<(String, String)>,
     pub body: Option<String>,
 }
-
-pub fn request(request_data: NetworkingRequest) -> &'static str {
-    let request_data = serde_json::to_string(&request_data).unwrap();
-    let response_data = "";
-    unsafe {
+pub fn request(request_data: NetworkingRequest) -> ResponseData {
+    let request_binary = match request_data {
+        NetworkingRequest::Get(get) => serde_json::to_string(&get).unwrap(),
+        NetworkingRequest::Post(post) => serde_json::to_string(&post).unwrap(),
+        NetworkingRequest::Put(put) => serde_json::to_string(&put).unwrap(),
+        NetworkingRequest::Delete(delete) => serde_json::to_string(&delete).unwrap(),
+        NetworkingRequest::Head(head) => serde_json::to_string(&head).unwrap(),
+        NetworkingRequest::Patch(patch) => serde_json::to_string(&patch).unwrap(),
+        NetworkingRequest::Options(options) => serde_json::to_string(&options).unwrap(),
+    };
+    let mut response_binary = "";
+    response_binary = unsafe {
         let len = hostcall_networking_request(
-            request_data.as_ptr(),
-            request_data.len(),
-            response_data.as_ptr(),
+            request_binary.as_ptr(),
+            request_binary.len(),
+            response_binary.as_ptr(),
         );
-        let slice = slice::from_raw_parts(response_data.as_ptr(), len);
-        str::from_utf8(slice).unwrap()
-    }
-}
-
-pub fn request_test(request_data: NetworkingRequest) -> ResponseData {
-    let request_data = serde_json::to_string(&request_data).unwrap();
-    let mut response_data = "";
-    response_data = unsafe {
-        let len = hostcall_networking_request(
-            request_data.as_ptr(),
-            request_data.len(),
-            response_data.as_ptr(),
-        );
-        let slice = slice::from_raw_parts(response_data.as_ptr(), len);
+        let slice = slice::from_raw_parts(response_binary.as_ptr(), len);
         str::from_utf8(slice).unwrap()
     };
-    let response_data: NetworkingResponse = serde_json::from_str(response_data).unwrap();
+    let response_data: NetworkingResponse = serde_json::from_str(response_binary).unwrap();
     response_data.response_data()
-}
-
-////////////////////////////////////////////////////////////////
-/// 原以为是不能传递非存储在栈上的数据，所以使用智能指针传递静态的引用，直到程序死亡才会消除，不存在悬垂引用
-pub fn request_test1(request_data: NetworkingRequest) -> &'static mut ResponseData {
-    let request_data = serde_json::to_string(&request_data).unwrap();
-    let mut response_data = "";
-    response_data = unsafe {
-        let len = hostcall_networking_request(
-            request_data.as_ptr(),
-            request_data.len(),
-            response_data.as_ptr(),
-        );
-        let slice = slice::from_raw_parts(response_data.as_ptr(), len);
-        str::from_utf8(slice).unwrap()
-    };
-    let response_data: NetworkingResponse = serde_json::from_str(response_data).unwrap();
-    Box::leak(Box::new(response_data.response_data()))
-}
-////////////////////////////////////////////////////////////////
-/// 只反序列化，不操作也会报错
-pub fn request_test2(request_data: NetworkingRequest) -> usize {
-    let request_data = serde_json::to_string(&request_data).unwrap();
-    let mut response_data = "";
-    response_data = unsafe {
-        let len = hostcall_networking_request(
-            request_data.as_ptr(),
-            request_data.len(),
-            response_data.as_ptr(),
-        );
-        let slice = slice::from_raw_parts(response_data.as_ptr(), len);
-        str::from_utf8(slice).unwrap()
-    };
-    let response_data: NetworkingResponse = serde_json::from_str(response_data).unwrap();
-    response_data.code.unwrap().into()
-}
-
-////////////////////////////////////////////////////////////////
-/// 只反序列化 这样也报错
-pub fn request_test3(request_data: NetworkingRequest) -> usize {
-    let request_data = serde_json::to_string(&request_data).unwrap();
-    let mut response_data = "";
-    response_data = unsafe {
-        let len = hostcall_networking_request(
-            request_data.as_ptr(),
-            request_data.len(),
-            response_data.as_ptr(),
-        );
-        let slice = slice::from_raw_parts(response_data.as_ptr(), len);
-        str::from_utf8(slice).unwrap()
-    };
-    let _response_data: NetworkingResponse = serde_json::from_str(response_data).unwrap();
-    8
 }
