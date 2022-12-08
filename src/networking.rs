@@ -9,8 +9,8 @@ pub enum NetworkingRequestMethod {
     Post,
     Delete,
     Put,
-    Patch, //Additions to the put method
-    Head,  //same as get
+    Patch,
+    Head,
     Options,
 }
 
