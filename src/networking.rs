@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::slice;
 use std::str;
 
-
-
 #[derive(Debug, Serialize)]
 pub enum NetworkingRequestMethod {
     Get,
