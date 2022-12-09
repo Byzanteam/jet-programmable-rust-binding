@@ -7,5 +7,6 @@ pub mod outputs;
 mod scaffolding;
 
 pub mod hostcalls;
+pub mod networking;
 
 pub use crate::scaffolding::wrap_run;
