@@ -25,4 +25,5 @@ default-features = false
 features = ["alloc"]
 
 [features]
-networking = []
+memory = []
+networking = ["memory"]
