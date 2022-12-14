@@ -1,10 +1,10 @@
-use crate::hostcalls::hostcall_networking_request;
+use crate::hostcalls::{hostcall_networking_request, hostcall_networking_retrieve_response};
+use crate::memory::__wasm_malloc;
+
 use core::str;
 use core::{slice, str::FromStr};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::mem;
-
 #[derive(Debug)]
 pub enum NetworkingRequestMethod {
     Get,
@@ -34,7 +34,8 @@ impl Serialize for NetworkingRequestMethod {
 }
 
 pub type NetworkingHeaders = Vec<(String, String)>;
-pub type NetworkingBody = Option<Vec<u8>>;
+//Due to the vec to str conversion after reading the data (see line 149 for details), the type of the body is changed from vec<u8> to String so that the deserialization can succeed
+pub type NetworkingBody = Option<String>;
 
 #[derive(Debug, Serialize)]
 pub struct NetworkingRequest {
@@ -138,22 +139,15 @@ pub struct NetworkingError {
     pub message: String,
 }
 
-pub fn request(request_data: &NetworkingRequest) -> Result<NetworkingResponse, NetworkingError> {
-    let request_binary = serde_json::to_string(request_data).unwrap();
-
-    let mut response_str = Vec::with_capacity(20000);
-    let response_str_ptr = response_str.as_mut_ptr();
-
+pub fn request(resquest: &NetworkingRequest) -> Result<NetworkingResponse, NetworkingError> {
+    let request_binary = serde_json::to_string(&resquest).unwrap();
+    let response_len =
+        unsafe { hostcall_networking_request(request_binary.as_ptr(), request_binary.len()) };
+    let response_ptr = __wasm_malloc(response_len);
     let response_str = unsafe {
-        let _ = hostcall_networking_request(
-            request_binary.as_ptr(),
-            request_binary.len(),
-            response_str_ptr,
-        );
-        mem::forget(response_str);
-        let slice = slice::from_raw_parts(response_str_ptr, 1000);
+        hostcall_networking_retrieve_response(response_ptr);
+        let slice = slice::from_raw_parts(response_ptr, response_len);
         str::from_utf8(slice).unwrap()
     };
-
     NetworkingResponse::from_str(response_str)
 }
