@@ -3,6 +3,7 @@ use core::str;
 use core::{slice, str::FromStr};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::mem;
 
 #[derive(Debug)]
 pub enum NetworkingRequestMethod {
@@ -140,15 +141,17 @@ pub struct NetworkingError {
 pub fn request(request_data: &NetworkingRequest) -> Result<NetworkingResponse, NetworkingError> {
     let request_binary = serde_json::to_string(request_data).unwrap();
 
-    let response_str = Vec::with_capacity(20000);
+    let mut response_str = Vec::with_capacity(20000);
+    let response_str_ptr = response_str.as_mut_ptr();
 
     let response_str = unsafe {
-        let len = hostcall_networking_request(
+        let _ = hostcall_networking_request(
             request_binary.as_ptr(),
             request_binary.len(),
-            response_str.as_ptr(),
+            response_str_ptr,
         );
-        let slice = slice::from_raw_parts(response_str.as_ptr(), len);
+        mem::forget(response_str);
+        let slice = slice::from_raw_parts(response_str_ptr, 1000);
         str::from_utf8(slice).unwrap()
     };
 
