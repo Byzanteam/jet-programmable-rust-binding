@@ -11,7 +11,7 @@ extern "C" {
     ///
     /// # Examples
     /// ## NetworkingRequest
-    /// ```no_run
+    /// ```ignore
     /// #[derive(Serialize)]
     /// struct NetworkingRequest {
     ///     method: String,
@@ -21,7 +21,7 @@ extern "C" {
     /// }
     /// ```
     /// ## Code Example
-    /// ```no_run
+    /// ```ignore
     /// let request = NetworkingRequest {
     ///     method: "GET".to_string(),
     ///     url: "https://rust-lang.org/".to_string(),
@@ -39,7 +39,7 @@ extern "C" {
     ///
     /// * `inputs_ptr` - NetworkingResponse Pointer to data
     /// ## Code Example
-    /// ```no_run
+    /// ```ignore
     /// let response_ptr = __wasm_malloc(response_len);
     /// let response_str = unsafe {
     ///    hostcall_networking_retrieve_response(response_ptr);
@@ -48,4 +48,16 @@ extern "C" {
     ///};
     /// ```
     pub fn hostcall_networking_retrieve_response(inputs_ptr: *const u8);
+    ///Parameters values for log debug
+    /// * `ptr` - ptr for log debug value
+    /// * `len` - len for log debug value
+    ///
+    /// ## Code Example
+    /// ```ignore
+    /// let log_debug = "this is a log"
+    /// unsafe{
+    ///     hostcall_logger_debug(log_debug.as_ptr(), log_debug.len());
+    /// }
+    /// ```
+    pub fn hostcall_logger_debug(ptr: *const u8, len: usize);
 }
