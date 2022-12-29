@@ -9,11 +9,27 @@ use crate::{
 use serde_json::Value;
 
 #[macro_export]
+#[cfg(feature = "memory")]
+macro_rules! if_memory {
+        ($($i:item)*) => ($($i)*)
+}
+
+#[macro_export]
+#[cfg(not(feature = "memory"))]
+macro_rules! if_memory {
+    ($($i:item)*) => {};
+}
+
+#[macro_export]
 macro_rules! program {
     ($entrypoint:ident, $types:expr) => {
         #[no_mangle]
         pub fn run(inputs: &str) {
-            jet_programmable_rust_binding::wrap_run(inputs, $entrypoint, $types)
+            $crate::wrap_run(inputs, $entrypoint, $types)
+        }
+
+        $crate::if_memory! {
+            pub use $crate::memory::*;
         }
     };
 }
